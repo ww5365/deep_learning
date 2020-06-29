@@ -1,3 +1,4 @@
+#-*- coding: utf-8 -*-
 import argparse
 import math
 import struct
@@ -48,7 +49,7 @@ class Vocab:
             vocab_items[vocab_hash['<eol>']].count += 1
             word_count += 2
 
-        self.bytes = fi.tell()
+        self.bytes = fi.tell()  ##文件指针当前位置,变相计算：文件长度 单位字节
         self.vocab_items = vocab_items         # List of VocabItem objects
         self.vocab_hash = vocab_hash           # Mapping from each token to its index in vocab
         self.word_count = word_count           # Total number of words in train file
@@ -92,7 +93,7 @@ class Vocab:
 
         # Update vocab_hash
         vocab_hash = {}
-        for i, token in enumerate(tmp):
+        for i, token in enumerate(tmp): #列出数据和数据下标;返回 enumerate(枚举) 对象;
             vocab_hash[token.word] = i
 
         self.vocab_items = tmp
@@ -106,7 +107,7 @@ class Vocab:
 
     def encode_huffman(self):
         # Build a Huffman tree
-        vocab_size = len(self)
+        vocab_size = len(self)  ## ? len(self)计算什么的长度 vacab_item 
         count = [t.count for t in self] + [1e15] * (vocab_size - 1)
         parent = [0] * (2 * vocab_size - 2)
         binary = [0] * (2 * vocab_size - 2)
@@ -114,7 +115,10 @@ class Vocab:
         pos1 = vocab_size - 1
         pos2 = vocab_size
 
-        for i in xrange(vocab_size - 1):
+        for i in xrange(vocab_size - 1): 
+            ##函数用法与 range 完全相同，所不同的是生成的不是一个数组，而是一个生成器? 生成器是什么？
+            ##只对序列进行读操作，xrange方法效率较高;python3进行统一，统一使用range
+
             # Find min1
             if pos1 >= 0:
                 if count[pos1] < count[pos2]:
@@ -265,8 +269,11 @@ def train_process(pid):
                     classifiers = [(token, 1)] + [(target, 0) for target in table.sample(neg)]
                 else:
                     classifiers = zip(vocab[token].path, vocab[token].code)
+                    ##zip函数用于将可迭代的对象作为参数，将对象中对应的元素打包成一个个元组，然后返回由这些元组组成的列表;
+                    ##[1,2,3] [4,5,6] => (1,4) (2,5) (3,6)
+
                 for target, label in classifiers:
-                    z = np.dot(neu1, syn1[target])
+                    z = np.dot(neu1, syn1[target])  ##dot 一纬是向量内积；矩阵的话，是矩阵乘法；
                     p = sigmoid(z)
                     g = alpha * (label - p)
                     neu1e += g * syn1[target] # Error to backpropagate to syn0
