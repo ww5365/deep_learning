@@ -84,7 +84,7 @@ class ID3Tree:
             self.construct(node, splited_value, splited_data, new_columns)
 
 
-df = pd.read_csv('../example_data.csv', dtype={'windy':'str'})
+df = pd.read_csv('example_data.csv', dtype={'windy':'str'})
 id3 = ID3Tree(df, 'play')
 id3.construct_tree()
 id3.print_tree(id3.root, '')

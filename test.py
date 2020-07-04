@@ -19,6 +19,14 @@ if __name__ == '__main__':
     print("parent: ", parent)
 
 
+    ##定义并初始化字典
+    result_dict = {1 : 4}
+    for key in result_dict.keys():
+        print (key)
+
+    
+
+
 
 
 
