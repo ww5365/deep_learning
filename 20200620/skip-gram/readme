@@ -1,0 +1,15 @@
+##word2vec.py 基本使用
+
+python word2vec.py -train wiki2.txt -model result.txt -negative 5  -dim 10 -window 5 -min-count 1 -cbow 0
+
+
+## 运行结果日志
+Unknown vocab size: 0
+Total words in training file: 466
+Total bytes in training file: 2461
+Vocab size: 242
+Initializing unigram table
+Filling unigram table
+Alpha: 0.025000 Progress: 452 of 466 (97.00%)
+Completed training. Training took 0.00376375118891 minutes
+Saving model to result.txt
