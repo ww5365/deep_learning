@@ -40,7 +40,7 @@ class Vocab:
                 vocab_items[vocab_hash[token]].count += 1
                 word_count += 1
             
-                if word_count % 10000 == 0:
+                if word_count % 100 == 0:
                     sys.stdout.write("\rReading word %d" % word_count)
                     sys.stdout.flush()
 
@@ -62,7 +62,7 @@ class Vocab:
         #assert self.word_count == sum([t.count for t in self.vocab_items]), 'word_count and sum of t.count do not agree'
         print 'Total words in training file: %d' % self.word_count
         print 'Total bytes in training file: %d' % self.bytes
-        print 'Vocab size: %d' % len(self)
+        print 'Vocab size: %d' % len(self.vocab_items)
 
     def __getitem__(self, i):
         return self.vocab_items[i]
@@ -108,18 +108,20 @@ class Vocab:
     def encode_huffman(self):
         # Build a Huffman tree
         vocab_size = len(self)  ## ? len(self)计算什么的长度 vacab_item 
-        count = [t.count for t in self] + [1e15] * (vocab_size - 1)
-        parent = [0] * (2 * vocab_size - 2)
+        count = [t.count for t in self] + [1e15] * (vocab_size - 1)##假设有n个节点，形成huffman树之后，总共有：n+n-1 = 2n - 1个节点
+        parent = [0] * (2 * vocab_size - 2)  ## 节点总数是：2n-1 除了root节点，其它节点都有父节点，所以2n-2
         binary = [0] * (2 * vocab_size - 2)
+
+        print "count len:%d len:%d" %(len(count),len(parent))
         
         pos1 = vocab_size - 1
         pos2 = vocab_size
 
         for i in xrange(vocab_size - 1): 
-            ##函数用法与 range 完全相同，所不同的是生成的不是一个数组，而是一个生成器? 生成器是什么？
+            ##函数用法与 range 完全相同，所不同的是生成的不是一个数组，而是一个生成器? 我的理解，生成器就是一个索引变量。
             ##只对序列进行读操作，xrange方法效率较高;python3进行统一，统一使用range
 
-            # Find min1
+            # Find min1 最小元素
             if pos1 >= 0:
                 if count[pos1] < count[pos2]:
                     min1 = pos1
@@ -156,8 +158,8 @@ class Vocab:
 
             node_idx = i
             while node_idx < root_idx:
-                if node_idx >= vocab_size: path.append(node_idx)
-                code.append(binary[node_idx])
+                if node_idx >= vocab_size: path.append(node_idx)  ##记录了从叶子节点的第一个父节点开始-》root节点的index
+                code.append(binary[node_idx]) ##记录了从叶子节点到root节点第一个孩子节点之间的所有编码
                 node_idx = parent[node_idx]
             path.append(root_idx)
 
@@ -173,7 +175,8 @@ class UnigramTable:
     def __init__(self, vocab):
         vocab_size = len(vocab)
         power = 0.75
-        norm = sum([math.pow(t.count, power) for t in vocab]) # Normalizing constant
+        norm = sum([math.pow(t.count, power) for t in vocab]) # Normalizing constant 
+        #对字典中所有单词，出现的次数^0.75 ,求和
 
         table_size = 1e8 # Length of the unigram table
         table = np.zeros(table_size, dtype=np.uint32)
@@ -183,12 +186,15 @@ class UnigramTable:
         i = 0
         for j, unigram in enumerate(vocab):
             p += float(math.pow(unigram.count, power))/norm
-            while i < table_size and float(i) / table_size < p:
+            while i < table_size and float(i) / table_size < p:  
+                ##这是计算了什么？按照每个单词的出现次数作为占比，填充table；假设第1个单词占比：10% 第2个占比：8% table长度为100，那么前10个元素指向0索引；10~18
+                # table
                 table[i] = j
                 i += 1
         self.table = table
 
     def sample(self, count):
+        ##randint(low=x, high=y, size=z or (m,n), d) 产出[low, high)之间的随机值，产出个数z或（m,n）
         indices = np.random.randint(low=0, high=len(self.table), size=count)
         return [self.table[i] for i in indices]
 
@@ -201,6 +207,35 @@ def sigmoid(z):
         return 1 / (1 + math.exp(-z))
 
 def init_net(dim, vocab_size):
+    '''
+    np.random.uniform(low, high, size):
+    从一个均匀分布[low,high)中随机采样，注意定义域是左闭右开;
+    
+    low: 采样下界，float类型，默认值为0；
+    high: 采样上界，float类型，默认值为1；
+    size: 输出样本数目，为int或元组(tuple)类型，例如，size=(m,n,k), 则输出m*n*k个样本，缺省时输出1个值。
+    返回值：ndarray类型，其形状和参数size中描述一致。float.
+    其它随机函数：
+    np.random.randint(low, high=None, size=None, dtype='l')  产出整数随机数
+    np.random.random(size=None) 在[0.0,1.0)上随机采样 float
+
+    '''
+
+
+    '''
+    np.ctypeslib.as_ctypes(obj): 从numpy数组创建并返回ctypes对象。 实际上接受了暴露array_interface的任何东西;
+    
+    np.ctypeslib.as_array (obj, shape=None): 
+    从ctypes数组或ctypes POINTER创建一个numpy数组。 numpy数组与ctypes对象共享内存。
+    如果从ctypes POINTER转换，则必须给出size参数。 如果从ctypes数组转换，则忽略size参数
+
+
+    Array: 进程间实现数据的共享,进线程安全 
+    multiprocessing.sharedctypes.Array(typecode_or_type, size_or_initializer, *, lock=True)
+    返回一个纯 ctypes 数组, 或者在此之上经过同步器包装过的进程安全的对象，这取决于 lock 参数的值，除此之外，和 RawArray() 一样。
+    如果 lock 为 True (默认值) 则将创建一个新的锁对象用于同步对值的访问。 如果 lock 为一个 Lock 或 RLock 对象则该对象将被用于同步对值的访问。 如果 lock 为 False 则对所返回对象的访问将不会自动得到锁的保护，也就是说它将不是“进程安全的”。
+    '''
+
     # Init syn0 with random numbers from a uniform distribution on the interval [-0.5, 0.5]/dim
     tmp = np.random.uniform(low=-0.5/dim, high=0.5/dim, size=(vocab_size, dim))
     syn0 = np.ctypeslib.as_ctypes(tmp)
@@ -295,7 +330,7 @@ def train_process(pid):
                     else:
                         classifiers = zip(vocab[token].path, vocab[token].code)
                     for target, label in classifiers:
-                        z = np.dot(syn0[context_word], syn1[target])
+                        z = np.dot(syn0[context_word], syn1[target]) ##点积
                         p = sigmoid(z)
                         g = alpha * (label - p)
                         neu1e += g * syn1[target]              # Error to backpropagate to syn0
