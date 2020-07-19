@@ -1,10 +1,10 @@
 '''
 @Author: xiaoyao jiang
 @Date: 2020-04-08 17:22:54
-@LastEditTime: 2020-07-06 22:01:20
+@LastEditTime: 2020-07-18 16:36:54
 @LastEditors: xiaoyao jiang
 @Description: train embedding & tfidf & autoencoder
-@FilePath: /bookClassification(ToDo)/src/word2vec/embedding.py
+@FilePath: /bookClassification(TODO)/src/word2vec/embedding.py
 '''
 import pandas as pd
 from gensim import models
@@ -46,7 +46,9 @@ class Embedding(metaclass=SingletonMetaclass):
         @param {type} None
         @return: None
         '''
-        self.stopWords = open(root_path + '/data/stopwords.txt').readlines()
+        # 停止词
+        self.stopWords = open(root_path + '/data/stopwords.txt', encoding='utf-8').readlines()
+        # autuencoder
         self.ae = AutoEncoder()
 
     def load_data(self):
@@ -63,7 +65,7 @@ class Embedding(metaclass=SingletonMetaclass):
         ])
         self.data["text"] = self.data['title'] + self.data['desc']
         self.data["text"] = self.data["text"].apply(query_cut)
-        self.data['text'] = self.data.text.apply(lambda x: " ".join(x))
+        self.data['text'] = self.data["text"].apply(lambda x: " ".join(x))
 
     def trainer(self):
         '''
@@ -72,34 +74,39 @@ class Embedding(metaclass=SingletonMetaclass):
         @return: None
         '''
         logger.info('train tfidf')
-        ### TODO
-        # 1. 训练tfidf模型
-
+        ###########################################
+        #          TODO: module 1 task 1.1        #
+        ###########################################
+        self.tfidf = 
         logger.info('train word2vec')
 
-        self.data['text'] = self.data.text.apply(lambda x: x.split(' '))
-        ### TODO
-        # 1. 训练 word2vec
-
+        self.data['text'] = self.data["text"].apply(lambda x: x.split(' '))
+        ###########################################
+        #          TODO: module 1 task 1.2        #
+        ###########################################
+        self.w2v = 
 
         logger.info('train fast')
         # 训练fast的词向量
-        ### TODO
-        # 1. 训练fasttest 模型
+        ###########################################
+        #          TODO: module 1 task 1.3        #
+        ###########################################
+        self.fast = 
 
         logger.info('train lda')
-        ### TODO
-        # 1. 训练 LDA 模型
-        # hint 使用gensim
+        ###########################################
+        #          TODO: module 1 task 1.4        #
+        ###########################################
+        self.LDAmodel = 
 
         logger.info('train autoencoder')
-        ### TODO
-        # 1. 训练autoencoder 模型
-        # hint 同级目录已经实现
+        ###########################################
+        #          TODO: module 1 task 1.5        #
+        ###########################################
 
     def saver(self):
         '''
-        @description: save all model 
+        @description: save all model
         @param {type} None
         @return: None
         '''

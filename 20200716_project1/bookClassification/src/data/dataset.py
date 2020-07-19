@@ -1,10 +1,10 @@
 '''
 @Author: xiaoyao jiang
 @Date: 2020-04-09 16:21:08
-@LastEditTime: 2020-07-06 20:25:23
+@LastEditTime: 2020-07-17 16:37:14
 @LastEditors: xiaoyao jiang
 @Description: data set
-@FilePath: /bookClassification(ToDo)/src/data/dataset.py
+@FilePath: /bookClassification/src/data/dataset.py
 '''
 import pandas as pd
 import torch
@@ -44,6 +44,7 @@ class MyDataset(Dataset):
         labels = int(data['category_id'])
         attention_mask, token_type_ids = [0], [0]
         if 'bert' in self.model_name:
+            # 如果是bert类模型， 使用tokenizer 的encode_plus方法处理数据
             text_dict = self.tokenizer.encode_plus(
                 text,  # Sentence to encode.
                 add_special_tokens=True,  # Add '[CLS]' and '[SEP]'
@@ -56,6 +57,7 @@ class MyDataset(Dataset):
                 'input_ids'], text_dict['attention_mask'], text_dict[
                     'token_type_ids']
         else:
+            # 如果是cnn rnn， transformer则使用自建的dictionary 来处理
             text = text.split()
             #             print(text)
             text = text + [0] * max(0, self.max_length - len(text)) if len(
@@ -63,7 +65,7 @@ class MyDataset(Dataset):
             input_ids = [self.tokenizer.indexer(x) for x in text]
 
 
-#             print(input_ids)
+#       print(input_ids)
         output = {
             "token_ids": input_ids,
             'attention_mask': attention_mask,
@@ -83,10 +85,12 @@ def collate_fn(batch):
     def padding(indice, max_length, pad_idx=0):
         """
         pad 函数
-        注意 token type id 右侧pad是添加1而不是0，1表示属于句子B
+        注意 token type id 右侧pad 添加 0
         """
-        ### TODO 
-        # 1. 根据max_length 加 padding
+        pad_indice = [
+            item + [pad_idx] * max(0, max_length - len(item))
+            for item in indice
+        ]
         return torch.tensor(pad_indice)
 
     token_ids = [data["token_ids"] for data in batch]

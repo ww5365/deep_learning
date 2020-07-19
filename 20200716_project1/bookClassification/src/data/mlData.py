@@ -1,10 +1,10 @@
 '''
 @Author: your name
 @Date: 2020-04-08 17:21:28
-@LastEditTime: 2020-07-06 20:18:42
+@LastEditTime: 2020-07-18 16:38:14
 @LastEditors: xiaoyao jiang
 @Description: Process data then get feature
-@FilePath: /bookClassification(ToDo)/src/data/mlData.py
+@FilePath: /bookClassification(TODO)/src/data/mlData.py
 '''
 
 import numpy as np
@@ -19,7 +19,7 @@ logger = create_logger(config.log_dir + 'data.log')
 
 
 class MLData(object):
-    def __init__(self, debug_mode=False):
+    def __init__(self, debug_mode=False, train_mode=True):
         '''
         @description: initlize ML dataset class
         @param {type}
@@ -27,10 +27,12 @@ class MLData(object):
         em, new embedding class
         @return:None
         '''
+        # 加载embedding， 如果不训练， 则不处理数据
         self.debug_mode = debug_mode
         self.em = Embedding()
         self.em.load()
-        self.preprocessor()
+        if train_mode:
+            self.preprocessor()
 
     def preprocessor(self):
         '''
@@ -46,16 +48,34 @@ class MLData(object):
         if self.debug_mode:
             self.train = self.train.sample(n=1000).reset_index(drop=True)
             self.dev = self.dev.sample(n=100).reset_index(drop=True)
-        ### TODO:
-        # 1. 分词
-        # 2. 去除停止词
-        # 3. 将label 转换为id
-        self.train["queryCut"] =
-        self.dev["queryCut"] =
-        self.train["queryCutRMStopWord"] =
-        self.dev["queryCutRMStopWord"] =
-        self.train["labelIndex"] =
-        self.dev["labelIndex"] =
+        # 拼接数据
+        self.train["text"] = self.train['title'] + self.train['desc']
+        self.dev["text"] = self.dev['title'] + self.dev['desc']
+        # 分词
+        ###########################################
+        #          TODO: module 2 task 1.1        #
+        ###########################################
+        self.train["queryCut"] = 
+        self.dev["queryCut"] = 
+        # 过滤停止词
+        ###########################################
+        #          TODO: module 2 task 1.2        #
+        ###########################################
+        self.train["queryCutRMStopWord"] = 
+        self.dev["queryCutRMStopWord"] = 
+        # 生成label 与id的对应关系， 并保存到文件中， 如果存在这个文件则直接加载
+        ###########################################
+        #          TODO: module 2 task 1.3        #
+        ###########################################
+        if os.path.exists(config.root_path + '/data/label2id.json'):
+            labelNameToIndex = json.load(
+                open(config.root_path + '/data/label2id.json', encoding='utf-8'))
+        else:
+
+        self.train["labelIndex"] = 
+        # 将测试集中的label名字映射到标签并保存到列labelIndex中
+        # 将测试集中的label名字映射到标签并保存到列labelIndex中
+        self.dev["labelIndex"] = 
 
     def process_data(self, method='word2vec'):
         '''
@@ -68,6 +88,7 @@ class MLData(object):
         y_train, label of train set
         y_test, label of test set
         '''
+        # 处理数据， 获取到数据的embedding， 如tfidf ,word2vec, fasttext
         X_train = self.get_feature(self.train, method)
         X_test = self.get_feature(self.dev, method)
         y_train = self.train["labelIndex"]

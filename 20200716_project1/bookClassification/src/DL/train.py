@@ -1,25 +1,26 @@
 '''
 @Author: xiaoyao jiang
 @Date: 2020-04-09 17:45:10
-@LastEditTime: 2020-07-06 20:27:42
+@LastEditTime: 2020-07-18 16:46:56
 @LastEditors: xiaoyao jiang
 @Description: main
-@FilePath: /bookClassification(ToDo)/src/DL/train.py
+@FilePath: /bookClassification(TODO)/src/DL/train.py
 '''
 import time
 import torch
 import numpy as np
 import pandas as pd
-from train_helper import train, init_network
 from importlib import import_module
 import argparse
 from torch.utils.data import DataLoader
 import joblib
 from src.data.dataset import MyDataset, collate_fn
+from src.DL.train_helper import train, init_network
 from src.data.dictionary import Dictionary
 from src.utils.tools import create_logger
 from src.utils import config
 from transformers import BertTokenizer, RobertaTokenizer, XLNetTokenizer
+
 
 parser = argparse.ArgumentParser(description='Chinese Text Classification')
 parser.add_argument(
@@ -93,14 +94,15 @@ if __name__ == '__main__':
         tokenizer = None
 
     logger.info('Making dataset & dataloader...')
-    ### TODO
-    # 1. 使用自定义的MyDataset， 创建DataLoader
-    train_dataset =
-    train_dataloader =
-    dev_dataset =
-    dev_dataloader =
-    test_dataset =
-    test_dataloader =
+    ###########################################
+    #          TODO: module 6 task 1.1        #
+    ###########################################
+    train_dataset = 
+    train_dataloader = 
+    dev_dataset = 
+    dev_dataloader = 
+    test_dataset = 
+    test_dataloader = 
 
     # train
 

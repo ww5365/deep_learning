@@ -1,7 +1,10 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+from __future__ import (absolute_import, unicode_literals)
 '''
 @Author: xiaoyao jiang
 @Date: 2020-04-08 15:17:27
-@LastEditTime: 2020-07-06 15:24:06
+@LastEditTime: 2020-07-17 16:29:29
 @LastEditors: xiaoyao jiang
 @Description: all model config
 @FilePath: /bookClassification/src/utils/config.py
@@ -16,7 +19,7 @@ root_path = os.path.split(os.path.split(curPath)[0])[0]
 
 train_file = root_path + '/data/train_clean.tsv'
 dev_file = root_path + '/data/dev_clean.tsv'
-test_file = root_path + '/data/test_clean.tsv'
+test_file = root_path + '/data/dev.csv'
 stopWords_file = root_path + '/data/stopwords.txt'
 log_dir = root_path + '/logs/'
 
@@ -26,10 +29,10 @@ embedding_pretrained = torch.tensor(
                        np.load(root_path + '/data/' + embedding)["embeddings"].astype('float32')) \
                        if embedding != 'random' else None
 
-is_cuda = True
+is_cuda = False
 device = torch.device('cuda') if is_cuda else torch.device('cpu')
 class_list = [
-    x.strip() for x in open(root_path + '/data/class.txt').readlines()
+    x.strip() for x in open(root_path + '/data/class.txt', encoding='utf-8').readlines()
 ]  # 类别名单
 num_classes = len(class_list)
 

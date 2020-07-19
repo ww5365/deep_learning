@@ -2,8 +2,8 @@
 @Author: xiaoyao jiang
 @LastEditors: xiaoyao jiang
 @Date: 2020-07-01 11:35:56
-@LastEditTime: 2020-07-06 22:02:00
-@FilePath: /bookClassification(ToDo)/src/utils/feature.py
+@LastEditTime: 2020-07-18 16:42:31
+@FilePath: /bookClassification(TODO)/src/utils/feature.py
 @Desciption:  feature engineering
 '''
 
@@ -21,14 +21,10 @@ from PIL import Image
 import torchvision.transforms as transforms
 
 
-def get_autoencoder_feature(train,
-                            test,
-                            max_features,
-                            max_len,
-                            model,
+def get_autoencoder_feature(data, max_features, max_len, model,
                             tokenizer=None):
     '''
-    @description: get_autoencoder_feature
+    @description: 获取autoencoder 特征
     @param {type}
     train, train data set
     test, test data set
@@ -38,8 +34,19 @@ def get_autoencoder_feature(train,
     tokenizer, autoencoder tokenizer
     @return: DataFrame of train and test
     '''
-    ### TODO
-    # 1. 返回autoencoder embedding
+    # 格式化数据
+    X, _ = format_data(data,
+                       max_features,
+                       max_len,
+                       tokenizer=tokenizer,
+                       shuffle=True)
+    # 使用autoencoder 的encoder 进行预测
+    ###########################################
+    #          TODO: module 3 task 1.5        #
+    ###########################################
+    data_ae = pd.DataFrame(,
+                           columns=['ae' + str(i) for i in range(max_len)])
+    return data_ae
 
 
 def get_lda_features(lda_model, document):
@@ -52,8 +59,11 @@ def get_lda_features(lda_model, document):
     document, input
     @return: lda feature
     '''
-    ### TODO
-    # 1. 返回lda feature
+    # 基于bag of word 格式数据获取lda的特征
+    ###########################################
+    #          TODO: module 3 task 1.4        #
+    ###########################################
+    return 
 
 
 def get_pretrain_embedding(text, tokenizer, model):
@@ -65,9 +75,11 @@ def get_pretrain_embedding(text, tokenizer, model):
     model, bert model
     @return: bert embedding ndarray
     '''
-    ### TODO
-    # 1. 返回bert embedding
-    # hint  返回需要转换成cpu模式
+    # 通过bert tokenizer 来处理数据， 然后使用bert model 获取bert embedding
+    ###########################################
+    #          TODO: module 3 task 1.3        #
+    ###########################################
+    return 
 
 
 def get_transforms():
@@ -76,6 +88,7 @@ def get_transforms():
     @param {type}None
     @return:transformed data
     '''
+    # 将图片数据处理为统一格式
     return transforms.Compose([
         transforms.Resize(256),
         transforms.CenterCrop(224),
@@ -95,13 +108,15 @@ def get_img_embedding(cover, model):
     model, image network model
     @return: modal feature
     '''
+    # 处理图片数据， 传入的不是图片则 生成（1， 1000）的0向量
     transforms = get_transforms()
-    ### TODO
-    # 1. 读取封面， 返回modal embedding
-    # hint  返回需要转换成cpu模式
+    ###########################################
+    #          TODO: module 3 task 1.2        #
+    ###########################################
+    return 
 
 
-def get_embedding_feature(mldata):
+def get_embedding_feature(data, tfidf, embedding_model):
     '''
     @description: get_embedding_feature, tfidf, word2vec -> max/mean, word2vec n-gram(2, 3, 4) -> max/mean, label embedding->max/mean
     @param {type}
@@ -112,46 +127,35 @@ def get_embedding_feature(mldata):
     train, train data set
     test, test data set
     '''
-    mldata.train["queryCutRMStopWords"] = mldata.train[
-        "queryCutRMStopWord"].apply(lambda x: " ".join(x))
-    mldata.dev["queryCutRMStopWords"] = mldata.dev[
-        "queryCutRMStopWord"].apply(lambda x: " ".join(x))
-    train_tfidf = pd.DataFrame(
-        mldata.em.tfidf.transform(
-            mldata.train["queryCutRMStopWords"].tolist()).toarray())
-    train_tfidf.columns = [
-        'tfidf' + str(i) for i in range(train_tfidf.shape[1])
-    ]
-    test_tfidf = pd.DataFrame(
-        mldata.em.tfidf.transform(
-            mldata.dev["queryCutRMStopWords"].tolist()).toarray())
-    test_tfidf.columns = [
-        'tfidf' + str(i) for i in range(train_tfidf.shape[1])
-    ]
+    # 根据过滤停止词后的数据， 获取tfidf 特征
+    data["queryCutRMStopWords"] = data["queryCutRMStopWord"].apply(
+        lambda x: " ".join(x))
+    tfidf_data = pd.DataFrame(
+        tfidf.transform(data["queryCutRMStopWords"].tolist()).toarray())
+    tfidf_data.columns = ['tfidf' + str(i) for i in range(tfidf_data.shape[1])]
 
     print("transform w2v")
-    mldata.train['w2v'] = mldata.train[
-        "queryCutRMStopWord"].apply(
-            lambda x: wam(x, mldata.em.w2v, aggregate=False))
-    mldata.dev['w2v'] = mldata.dev["queryCutRMStopWord"].apply(
-        lambda x: wam(x, mldata.em.w2v, aggregate=False))
+    # 同上， 获取embedding 特征， 不进行聚合
+    data['w2v'] = data["queryCutRMStopWord"].apply(
+        lambda x: wam(x, embedding_model, aggregate=False))  # [seq_len * 300]
 
-    train = copy.deepcopy(mldata.train)
-    test = copy.deepcopy(mldata.dev)
-    labelNameToIndex = json.load(open(config.root_path +
-                                      '/data/label2id.json'))
+    # 深度拷贝数据
+    train = copy.deepcopy(data)
+    # 加载所有类别， 获取类别的embedding， 并保存文件
+    labelNameToIndex = json.load(
+        open(config.root_path + '/data/label2id.json', encoding='utf-8'))
     labelIndexToName = {v: k for k, v in labelNameToIndex.items()}
     w2v_label_embedding = np.array([
-        mldata.em.w2v.wv.get_vector(labelIndexToName[key])
+        embedding_model.wv.get_vector(labelIndexToName[key])
         for key in labelIndexToName
-        if labelIndexToName[key] in mldata.em.w2v.wv.vocab.keys()
+        if labelIndexToName[key] in embedding_model.wv.vocab.keys()
     ])
 
     joblib.dump(w2v_label_embedding,
                 config.root_path + '/data/w2v_label_embedding.pkl')
+    # 根据未聚合的embedding 数据， 获取各类embedding 特征
     train = generate_feature(train, w2v_label_embedding, model_name='w2v')
-    test = generate_feature(test, w2v_label_embedding, model_name='w2v')
-    return train_tfidf, test_tfidf, train, test
+    return tfidf_data, train
 
 
 ch2en = {
@@ -177,14 +181,14 @@ def tag_part_of_speech(data):
     adjective_count, num of adj
     verb_count, num of verb
     '''
-    ### TODO
-    # 1. 计算名词个数
-    # 1. 计算形容词个数
-    # 1. 计算动词个数
+    # 获取文本的词性， 并计算名词，动词， 形容词的个数
     words = [tuple(x) for x in list(pseg.cut(data))]
-    noun_count =
-    adjective_count =
-    verb_count =
+    noun_count = len(
+        [w for w in words if w[1] in ('NN', 'NNP', 'NNPS', 'NNS')])
+    adjective_count = len([w for w in words if w[1] in ('JJ', 'JJR', 'JJS')])
+    verb_count = len([
+        w for w in words if w[1] in ('VB', 'VBD', 'VBG', 'VBN', 'VBP', 'VBZ')
+    ])
     return noun_count, adjective_count, verb_count
 
 
@@ -196,31 +200,53 @@ def get_basic_feature(df):
     @return:
     df, dataframe
     '''
+    ###########################################
+    #          TODO: module 3 task 1.1        #
+    ###########################################
+    # 将title 和 desc 拼接
     df['text'] = df['title'] + df['desc']
-    df['queryCut'] = df['queryCut'].progress_apply(
-        lambda x: [i if i not in ch2en.keys() else ch2en[i] for i in x])
-    df['length'] = ### TODO 计算input 长度
-    df['capitals'] = ### TODO 计算大写 个数
-    df['caps_vs_length'] = ### TODO 计算大写个数和长度的比值
-    df['num_exclamation_marks'] =### TODO 计算感叹号的个数
-    df['num_question_marks'] =### TODO 计算问号长度
-    df['num_punctuation'] =### TODO 计算标点符号个数
-    df['num_symbols'] =### TODO 计算*&$% 的个数
-    df['num_words'] =### TODO 计算词的个数
-    df['num_unique_words'] =### TODO 计算唯一词的个数
-    df['words_vs_unique'] =### TODO词的个数与唯一词个数的比例
-    df['nouns'], df['adjectives'], df['verbs'] = zip(
-        *df['text'].progress_apply(lambda x: tag_part_of_speech(x)))
-    df['nouns_vs_length'] =### TODO 计算名词个数与长度的占比
-    df['adjectives_vs_length'] =### TODO 计算形容词个数与长度的占比
-    df['verbs_vs_length'] =### TODO 计算动词个数与长度的占比
-    df['nouns_vs_words'] =### TODO 计算名词个数与词的个数的占比
-    df['adjectives_vs_words'] =### TODO 计算形容词个数与词的个数的占比
-    df['verbs_vs_words'] =### TODO 计算动词个数与词的个数的占比
-    # More Handy Features
-    df["count_words_title"] =### TODO 计算title的词的个数
-    df["mean_word_len"] =### TODO 计算词的平均长度
-    df['punct_percent'] =### TODO 计算标点个数与词的个数的占比
+    # 分词
+    df['queryCut'] = 
+    # 文本的长度
+    df['length'] = 
+    # 大写的个数
+    df['capitals'] = 
+    # 大写 与 文本长度的占比
+    df['caps_vs_length'] = 
+    # 感叹号的个数
+    df['num_exclamation_marks'] = 
+    # 问号个数
+    df['num_question_marks'] = 
+    # 标点符号个数
+    df['num_punctuation'] = 
+    # *&$%字符的个数
+    df['num_symbols'] = 
+    # 词的个数
+    df['num_words'] = 
+    # 唯一词的个数
+    df['num_unique_words'] = 
+    # 唯一词 与总词数的比例
+    df['words_vs_unique'] = 
+    # 获取名词， 形容词， 动词的个数， 使用tag_part_of_speech函数
+    df['nouns'], df['adjectives'], df['verbs'] = 
+    # 名词占总长度的比率
+    df['nouns_vs_length'] = 
+    # 形容词占总长度的比率
+    df['adjectives_vs_length'] = 
+    # 动词占总长度的比率
+    df['verbs_vs_length'] =
+    # 名词占总词数的比率
+    df['nouns_vs_words'] = 
+    # 形容词占总词数的比率
+    df['adjectives_vs_words'] = 
+    # 动词占总词数的比率
+    df['verbs_vs_words'] = 
+    # 首字母大写其他小写的个数
+    df["count_words_title"] = 
+    # 平均词的个数
+    df["mean_word_len"] = 
+    # 标点符号的占比
+    df['punct_percent'] = 
     return df
 
 
@@ -236,19 +262,21 @@ def generate_feature(data, label_embedding, model_name='w2v'):
     print('generate w2v & fast label max/mean')
     # 首先在预训练的词向量中获取标签的词向量句子,每一行表示一个标签表示
     # 每一行表示一个标签的embedding
-
+    # 计算label embedding 具体参见文档
     data[model_name + '_label_mean'] = data[model_name].progress_apply(
         lambda x: Find_Label_embedding(x, label_embedding, method='mean'))
     data[model_name + '_label_max'] = data[model_name].progress_apply(
         lambda x: Find_Label_embedding(x, label_embedding, method='max'))
 
     print('generate embedding max/mean')
+    # 将embedding 进行max, mean聚合
     data[model_name + '_mean'] = data[model_name].progress_apply(
         lambda x: np.mean(np.array(x), axis=0))
     data[model_name + '_max'] = data[model_name].progress_apply(
         lambda x: np.max(np.array(x), axis=0))
 
     print('generate embedding window max/mean')
+    # 滑窗处理embedding 然后聚合
     data[model_name + '_win_2_mean'] = data[model_name].progress_apply(
         lambda x: Find_embedding_with_windows(x, 2, method='mean'))
     data[model_name + '_win_3_mean'] = data[model_name].progress_apply(
@@ -276,11 +304,17 @@ def Find_embedding_with_windows(embedding_matrix, window_size=2,
     '''
     # 最终的词向量
     result_list = []
+    # 遍历input的长度， 根据窗口的大小获取embedding， 进行mean操作， 然后将得到的结果extend到list中， 最后进行mean max 聚合
     for k1 in range(len(embedding_matrix)):
+        # 如何当前位置 + 窗口大小 超过input的长度， 则取当前位置到结尾
+        # mean 操作后要reshape 为 （1， 300）大小
         if int(k1 + window_size) > len(embedding_matrix):
-            result_list.extend(embedding_matrix[k1:])
+            result_list.extend(
+                np.mean(embedding_matrix[k1:], axis=0).reshape(1, 300))
         else:
-            result_list.extend(embedding_matrix[k1:k1 + window_size])
+            result_list.extend(
+                np.mean(embedding_matrix[k1:k1 + window_size],
+                        axis=0).reshape(1, 300))
     if method == 'mean':
         return np.mean(result_list, axis=0)
     else:

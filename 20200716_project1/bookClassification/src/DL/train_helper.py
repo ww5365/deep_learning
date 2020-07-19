@@ -1,10 +1,10 @@
 '''
 @Author: xiaoyao jiang
 @Date: 2020-04-09 17:46:03
-@LastEditTime: 2020-07-06 20:30:20
+@LastEditTime: 2020-07-18 16:47:41
 @LastEditors: xiaoyao jiang
 @Description: train
-@FilePath: /bookClassification(ToDo)/src/DL/train_helper.py
+@FilePath: /bookClassification(TODO)/src/DL/train_helper.py
 '''
 import numpy as np
 import torch
@@ -65,9 +65,11 @@ def train(config, model, train_iter, dev_iter, test_iter):
             'weight_decay':
             0.0
         }]
-        ### TODO
-        # 1. 初始化AdamW 优化器
-        optimizer =
+        # optimizer = torch.optim.Adam(model.parameters(), lr=config.learning_rate)
+        ###########################################
+        #          TODO: module 6 task 1.2        #
+        ###########################################
+        optimizer = 
 
 
 #         scheduler = get_linear_schedule_with_warmup(
@@ -87,17 +89,13 @@ def train(config, model, train_iter, dev_iter, test_iter):
             labels = labels.to(config.device)
             mask = mask.to(config.device)
             tokens = tokens.to(config.device)
-            ### TODO
-            # 1. 加载模型进行训练
-            # 2. 清空梯度
-            # 3. 计算loss
-            # 4. loss backpropergation
-            # 5. 优化器step
-            outputs = model((trains, mask, tokens))
-            model.zero_grad()
+            ###########################################
+            #          TODO: module 6 task 1.2        #
+            ###########################################
+
+
             loss = F.cross_entropy(outputs, labels)
-            loss.backward()
-            optimizer.step()
+
             #             scheduler.step()
             if total_batch % 1000 == 0 and total_batch != 0:
                 # 每多少轮输出在训练集和验证集上的效果
