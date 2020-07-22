@@ -85,8 +85,10 @@ if __name__ == '__main__':
 
     ##ctypes 类型使用
     tmp = np.ctypeslib.as_ctypes(tmp2)
-    print(tmp)
+    print("ctypes tmp:",tmp)   ##<c_double_Array_5 object at 0x119c8cb00>
+    print("dir tmp:", dir(tmp), tmp._type_)
     tmp = Array(tmp._type_, tmp, lock=False)
+    print("Array tmp:", tmp)  ##<c_double_Array_5 object at 0x11a4ce050>
     print(tmp[0])
 
 

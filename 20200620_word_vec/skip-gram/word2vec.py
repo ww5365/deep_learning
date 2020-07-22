@@ -233,12 +233,15 @@ def init_net(dim, vocab_size):
     Array: 进程间实现数据的共享,进线程安全 
     multiprocessing.sharedctypes.Array(typecode_or_type, size_or_initializer, *, lock=True)
     返回一个纯 ctypes 数组, 或者在此之上经过同步器包装过的进程安全的对象，这取决于 lock 参数的值，除此之外，和 RawArray() 一样。
-    如果 lock 为 True (默认值) 则将创建一个新的锁对象用于同步对值的访问。 如果 lock 为一个 Lock 或 RLock 对象则该对象将被用于同步对值的访问。 如果 lock 为 False 则对所返回对象的访问将不会自动得到锁的保护，也就是说它将不是“进程安全的”。
+    如果 lock 为 True (默认值) 则将创建一个新的锁对象用于同步对值的访问。 
+    如果 lock 为一个 Lock 或 RLock 对象则该对象将被用于同步对值的访问。 
+    如果 lock 为 False 则对所返回对象的访问将不会自动得到锁的保护，也就是说它将不是“进程安全的”。
+
     '''
 
     # Init syn0 with random numbers from a uniform distribution on the interval [-0.5, 0.5]/dim
     tmp = np.random.uniform(low=-0.5/dim, high=0.5/dim, size=(vocab_size, dim))
-    syn0 = np.ctypeslib.as_ctypes(tmp)
+    syn0 = np.ctypeslib.as_ctypes(tmp)   ##问题： syn0为什么要转成ctypes类型？
     syn0 = Array(syn0._type_, syn0, lock=False)
 
     # Init syn1 with zeros
@@ -387,8 +390,13 @@ def train(fi, fo, cbow, neg, dim, alpha, win, min_count, num_processes, binary):
     # min_count - Min count for words used to learn <unk>
     vocab = Vocab(fi, min_count)
 
-    # Init net
-    syn0, syn1 = init_net(dim, len(vocab))
+    '''
+    Init net
+    syn0: [-0.5/dim, 0.5/dim)之间的均匀分布，size大小: vocab_size * dim
+    syn1: 全0，size大小: vocab_size * dim
+    
+    '''
+    syn0, syn1 = init_net(dim, len(vocab))   ##syn0对应v(.) syn1对应:theta, neu1对应xw， neu1e对应e
 
     global_word_count = Value('i', 0)
     table = None
