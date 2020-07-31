@@ -29,13 +29,7 @@ if __name__ == '__main__':
     print (c1)
     print (c1['sec3']) ##访问没有元素不会抛异常
 
-    ##list 使用
-    vocab_size = 10
-    parent = [1] * (2 * vocab_size - 2) ##向量的填充操作？
-    print("parent: ", parent)
-    ###list 中冒号使用说明 [start:end:step] 取[start,end)之间的元素，同时step为步长
-    li = [0,1,2,3,4]
-    print(li[::2]) 
+ 
 
 
     ##定义并初始化字典
@@ -88,7 +82,7 @@ if __name__ == '__main__':
     print("ctypes tmp:",tmp)   ##<c_double_Array_5 object at 0x119c8cb00>
     print("dir tmp:", dir(tmp), tmp._type_)
     tmp = Array(tmp._type_, tmp, lock=False)
-    print("Array tmp:", tmp)  ##<c_double_Array_5 object at 0x11a4ce050>
+    print("Array tmp:", tmp)  ##<c_double_Array_5 object at 0x11a4ce050> 实际都是c double array类型，不过Array后，可以控制进线程的安全性；
     print(tmp[0])
 
 

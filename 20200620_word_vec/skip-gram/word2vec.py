@@ -101,6 +101,8 @@ class Vocab:
 
         print
         print 'Unknown vocab size:', count_unk
+        print "vocab_hash:", self.vocab_hash
+        print 'voca_item:', self.vocab_items
 
     def indices(self, tokens):
         return [self.vocab_hash[token] if token in self else self.vocab_hash['<unk>'] for token in tokens]
@@ -241,11 +243,13 @@ def init_net(dim, vocab_size):
 
     # Init syn0 with random numbers from a uniform distribution on the interval [-0.5, 0.5]/dim
     tmp = np.random.uniform(low=-0.5/dim, high=0.5/dim, size=(vocab_size, dim))
+    print "syn0:" , tmp
     syn0 = np.ctypeslib.as_ctypes(tmp)   ##问题： syn0为什么要转成ctypes类型？
     syn0 = Array(syn0._type_, syn0, lock=False)
 
     # Init syn1 with zeros
     tmp = np.zeros(shape=(vocab_size, dim))
+    print "syn1:" , tmp
     syn1 = np.ctypeslib.as_ctypes(tmp)
     syn1 = Array(syn1._type_, syn1, lock=False)
 
@@ -277,7 +281,7 @@ def train_process(pid):
                 global_word_count.value += (word_count - last_word_count)
                 last_word_count = word_count
 
-                # Recalculate alpha
+                # Recalculate alpha   为什么需要更新过alpha？
                 alpha = starting_alpha * (1 - float(global_word_count.value) / vocab.word_count)
                 if alpha < starting_alpha * 0.0001: alpha = starting_alpha * 0.0001
 
@@ -292,12 +296,18 @@ def train_process(pid):
             context_start = max(sent_pos - current_win, 0)
             context_end = min(sent_pos + current_win + 1, len(sent))
             context = sent[context_start:sent_pos] + sent[sent_pos+1:context_end] # Turn into an iterator?
-
+            print "current_win:", current_win
+            print "context", context
             # CBOW
             if cbow:
                 # Compute neu1
                 neu1 = np.mean(np.array([syn0[c] for c in context]), axis=0)
                 assert len(neu1) == dim, 'neu1 and dim do not agree'
+                
+                for c in context:
+                    print "syn0[c]:", c, syn0[c]
+
+                print "neu1:", neu1
 
                 # Init neu1e with zeros
                 neu1e = np.zeros(dim)
@@ -312,14 +322,23 @@ def train_process(pid):
 
                 for target, label in classifiers:
                     z = np.dot(neu1, syn1[target])  ##dot 一纬是向量内积；矩阵的话，是矩阵乘法；
+                    print "before syn1[target]:", target,label,syn1[target]
+                    print "dot:" ,z 
+
                     p = sigmoid(z)
                     g = alpha * (label - p)
                     neu1e += g * syn1[target] # Error to backpropagate to syn0
                     syn1[target] += g * neu1  # Update syn1
 
+                    print "p,g,neu1e,syn1[target]", p, g, neu1e
+                    print "after sys1[target]",syn1[target]
+
                 # Update syn0
                 for context_word in context:
                     syn0[context_word] += neu1e
+                    print "context_word", context_word
+                    print "syn0[contxt_wod]",syn0[context_word] 
+                    
 
             # Skip-gram
             else:
@@ -333,7 +352,15 @@ def train_process(pid):
                     else:
                         classifiers = zip(vocab[token].path, vocab[token].code)
                     for target, label in classifiers:
-                        z = np.dot(syn0[context_word], syn1[target]) ##点积
+                        '''
+                        hierarchical 实现和pdf材料中的分析有差异：
+                        1、syn1[target]实际标识的w   syn0[context_word]标识u 上下文的词
+                        2、将材料中的推导公式，w表示成huffman树的theta形式， u表示成V(u)形式，来进行推导，就可以映射到下面的实现当中了。
+                        3、理解一下，syn1是huffman树，非叶子节点，构成的词向量矩阵，它肯定比syn0行数多，因为它多行构成一个路径，才标识一个词。而sys0就是一行标识一个词的向量；
+
+                        '''
+                        z = np.dot(syn0[context_word], syn1[target]) ##点积 
+
                         p = sigmoid(z)
                         g = alpha * (label - p)
                         neu1e += g * syn1[target]              # Error to backpropagate to syn0

@@ -200,7 +200,7 @@ python3 embedding.py
     ```
 3. 在 `src/ML/models.py` 中的 `feature_engineer`函数 调用 `src/utils/feature.py`中的`get_lda_features`函数
 
-##### 任务4: 根据`src/data/mlData.py` 中已经加载的 `autoencoder` 模型， 获取 autoencoder 特征
+##### 任务5: 根据`src/data/mlData.py` 中已经加载的 `autoencoder` 模型， 获取 autoencoder 特征
 
 1. 完成 autoencoder 特征的获取
 
