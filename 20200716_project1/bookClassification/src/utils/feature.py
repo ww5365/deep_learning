@@ -2,8 +2,8 @@
 @Author: xiaoyao jiang
 @LastEditors: xiaoyao jiang
 @Date: 2020-07-01 11:35:56
-@LastEditTime: 2020-07-18 16:42:31
-@FilePath: /bookClassification(TODO)/src/utils/feature.py
+@LastEditTime: 2020-07-17 16:44:16
+@FilePath: /bookClassification/src/utils/feature.py
 @Desciption:  feature engineering
 '''
 
@@ -41,10 +41,7 @@ def get_autoencoder_feature(data, max_features, max_len, model,
                        tokenizer=tokenizer,
                        shuffle=True)
     # 使用autoencoder 的encoder 进行预测
-    ###########################################
-    #          TODO: module 3 task 1.5        #
-    ###########################################
-    data_ae = pd.DataFrame(,
+    data_ae = pd.DataFrame(model.encoder.predict(X, batch_size=64, verbose=1),
                            columns=['ae' + str(i) for i in range(max_len)])
     return data_ae
 
@@ -60,10 +57,10 @@ def get_lda_features(lda_model, document):
     @return: lda feature
     '''
     # 基于bag of word 格式数据获取lda的特征
-    ###########################################
-    #          TODO: module 3 task 1.4        #
-    ###########################################
-    return 
+    topic_importances = lda_model.get_document_topics(document,
+                                                      minimum_probability=0)
+    topic_importances = np.array(topic_importances)
+    return topic_importances[:, 1]
 
 
 def get_pretrain_embedding(text, tokenizer, model):
@@ -76,10 +73,20 @@ def get_pretrain_embedding(text, tokenizer, model):
     @return: bert embedding ndarray
     '''
     # 通过bert tokenizer 来处理数据， 然后使用bert model 获取bert embedding
-    ###########################################
-    #          TODO: module 3 task 1.3        #
-    ###########################################
-    return 
+    text_dict = tokenizer.encode_plus(
+        text,  # Sentence to encode.
+        add_special_tokens=True,  # Add '[CLS]' and '[SEP]'
+        max_length=400,  # Pad & truncate all sentences.
+        ad_to_max_length=True,
+        return_attention_mask=True,  # Construct attn. masks.
+        return_tensors='pt',
+    )
+    input_ids, attention_mask, token_type_ids = text_dict[
+        'input_ids'], text_dict['attention_mask'], text_dict['token_type_ids']
+    _, res = model(input_ids.to(config.device),
+                   attention_mask=attention_mask.to(config.device),
+                   token_type_ids=token_type_ids.to(config.device))
+    return res.detach().cpu().numpy()[0]
 
 
 def get_transforms():
@@ -110,10 +117,11 @@ def get_img_embedding(cover, model):
     '''
     # 处理图片数据， 传入的不是图片则 生成（1， 1000）的0向量
     transforms = get_transforms()
-    ###########################################
-    #          TODO: module 3 task 1.2        #
-    ###########################################
-    return 
+    if str(cover)[-3:] != 'jpg':
+        return np.zeros((1, 1000))[0]
+    image = Image.open(cover).convert("RGB")
+    image = transforms(image).to(config.device)
+    return model(image.unsqueeze(0)).detach().cpu().numpy()[0]
 
 
 def get_embedding_feature(data, tfidf, embedding_model):
@@ -200,53 +208,61 @@ def get_basic_feature(df):
     @return:
     df, dataframe
     '''
-    ###########################################
-    #          TODO: module 3 task 1.1        #
-    ###########################################
     # 将title 和 desc 拼接
     df['text'] = df['title'] + df['desc']
     # 分词
-    df['queryCut'] = 
+    df['queryCut'] = df['queryCut'].progress_apply(
+        lambda x: [i if i not in ch2en.keys() else ch2en[i] for i in x])
     # 文本的长度
-    df['length'] = 
+    df['length'] = df['queryCut'].progress_apply(lambda x: len(x))
     # 大写的个数
-    df['capitals'] = 
+    df['capitals'] = df['queryCut'].progress_apply(
+        lambda x: sum(1 for c in x if c.isupper()))
     # 大写 与 文本长度的占比
-    df['caps_vs_length'] = 
+    df['caps_vs_length'] = df.progress_apply(
+        lambda row: float(row['capitals']) / float(row['length']), axis=1)
     # 感叹号的个数
-    df['num_exclamation_marks'] = 
+    df['num_exclamation_marks'] = df['queryCut'].progress_apply(
+        lambda x: x.count('!'))
     # 问号个数
-    df['num_question_marks'] = 
+    df['num_question_marks'] = df['queryCut'].progress_apply(
+        lambda x: x.count('?'))
     # 标点符号个数
-    df['num_punctuation'] = 
+    df['num_punctuation'] = df['queryCut'].progress_apply(
+        lambda x: sum(x.count(w) for w in string.punctuation))
     # *&$%字符的个数
-    df['num_symbols'] = 
+    df['num_symbols'] = df['queryCut'].progress_apply(
+        lambda x: sum(x.count(w) for w in '*&$%'))
     # 词的个数
-    df['num_words'] = 
+    df['num_words'] = df['queryCut'].progress_apply(lambda x: len(x))
     # 唯一词的个数
-    df['num_unique_words'] = 
+    df['num_unique_words'] = df['queryCut'].progress_apply(
+        lambda x: len(set(w for w in x)))
     # 唯一词 与总词数的比例
-    df['words_vs_unique'] = 
+    df['words_vs_unique'] = df['num_unique_words'] / df['num_words']
     # 获取名词， 形容词， 动词的个数， 使用tag_part_of_speech函数
-    df['nouns'], df['adjectives'], df['verbs'] = 
+    df['nouns'], df['adjectives'], df['verbs'] = zip(
+        *df['text'].progress_apply(lambda x: tag_part_of_speech(x)))
     # 名词占总长度的比率
-    df['nouns_vs_length'] = 
+    df['nouns_vs_length'] = df['nouns'] / df['length']
     # 形容词占总长度的比率
-    df['adjectives_vs_length'] = 
+    df['adjectives_vs_length'] = df['adjectives'] / df['length']
     # 动词占总长度的比率
-    df['verbs_vs_length'] =
+    df['verbs_vs_length'] = df['verbs'] / df['length']
     # 名词占总词数的比率
-    df['nouns_vs_words'] = 
+    df['nouns_vs_words'] = df['nouns'] / df['num_words']
     # 形容词占总词数的比率
-    df['adjectives_vs_words'] = 
+    df['adjectives_vs_words'] = df['adjectives'] / df['num_words']
     # 动词占总词数的比率
-    df['verbs_vs_words'] = 
+    df['verbs_vs_words'] = df['verbs'] / df['num_words']
     # 首字母大写其他小写的个数
-    df["count_words_title"] = 
+    df["count_words_title"] = df["queryCut"].progress_apply(
+        lambda x: len([w for w in x if w.istitle()]))
     # 平均词的个数
-    df["mean_word_len"] = 
+    df["mean_word_len"] = df["text"].progress_apply(
+        lambda x: np.mean([len(w) for w in x]))
     # 标点符号的占比
-    df['punct_percent'] = 
+    df['punct_percent'] = df['num_punctuation'] * 100 / df['num_words']
     return df
 
 

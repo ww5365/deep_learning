@@ -1,11 +1,11 @@
 '''
 @Author: xiaoyao jiang
 @Date: 2020-04-08 19:39:30
-@LastEditTime: 2020-07-18 16:46:23
+@LastEditTime: 2020-07-17 15:59:05
 @LastEditors: xiaoyao jiang
 @Description: There are two options. One is using pretrained embedding as feature to compare common ML models.
               The other is using feature engineering + param search tech + imbanlance to train a liaghtgbm model.
-@FilePath: /bookClassification(TODO)/src/ML/models.py
+@FilePath: /bookClassification/src/ML/models.py
 '''
 import os
 
@@ -29,6 +29,11 @@ from __init__ import *
 from src.data.mlData import MLData
 from src.utils import config
 from src.utils.config import root_path
+from src.utils.tools import (Grid_Train_model, bayes_parameter_opt_lgb,
+                             query_cut, create_logger, formate_data, get_score)
+from src.utils.feature import (get_embedding_feature, get_img_embedding,
+                               get_lda_features, get_pretrain_embedding,
+                               get_autoencoder_feature, get_basic_feature)
 
 logger = create_logger(config.log_dir + 'model.log')
 
@@ -50,19 +55,18 @@ class Models(object):
         @return: No return
         '''
         # 加载图像处理模型， resnet, resnext, wide resnet， 如果支持cuda, 则将模型加载到cuda中
-        ###########################################
-        #          TODO: module 2 task 2.1        #
-        ###########################################
-        self.res_model =   # res model for modal feature [1* 1000]
+        self.res_model = torchvision.models.resnet152(
+            pretrained=True)  # res model for modal feature [1* 1000]
         self.res_model = self.res_model.to(config.device)
-        self.resnext_model = 
+        self.resnext_model = torchvision.models.resnext101_32x8d(
+            pretrained=True)
         self.resnext_model = self.resnext_model.to(config.device)
-        self.wide_model = 
+        self.wide_model = torchvision.models.wide_resnet101_2(pretrained=True)
         self.wide_model = self.wide_model.to(config.device)
         # 加载 bert 模型， 如果支持cuda, 则将模型加载到cuda中
-        self.bert_tonkenizer = 
+        self.bert_tonkenizer = BertTokenizer.from_pretrained(config.root_path +
                                                              '/model/bert')
-        self.bert = 
+        self.bert = BertModel.from_pretrained(config.root_path + '/model/bert')
         self.bert = self.bert.to(config.device)
 
         # 初始化 MLdataset 类， debug_mode为true 则使用部分数据， train_mode表示是否训练
@@ -133,11 +137,8 @@ class Models(object):
 
         logger.info("generate basic feature ")
         # 获取nlp 基本特征
-        ###########################################
-        #          TODO: module 3 task 1.1        #
-        ###########################################
-        train = 
-        test = 
+        train = get_basic_feature(train)
+        test = get_basic_feature(test)
 
         logger.info("generate modal feature ")
         # 加载图书封面的文件
@@ -151,43 +152,57 @@ class Models(object):
             if x + '.jpg' in cover else '')
 
         # 根据封面获取封面的embedding
-        ###########################################
-        #          TODO: module 3 task 1.2        #
-        ###########################################
-        train['res_embedding'] = 
-        test['res_embedding'] = 
+        train['res_embedding'] = train['cover'].progress_apply(
+            lambda x: get_img_embedding(x, self.res_model))
+        test['res_embedding'] = test.cover.progress_apply(
+            lambda x: get_img_embedding(x, self.res_model))
 
-        train['resnext_embedding'] = 
-        test['resnext_embedding'] = 
+        train['resnext_embedding'] = train['cover'].progress_apply(
+            lambda x: get_img_embedding(x, self.resnext_model))
+        test['resnext_embedding'] = test.cover.progress_apply(
+            lambda x: get_img_embedding(x, self.resnext_model))
 
-        train['wide_embedding'] = 
-        test['wide_embedding'] = 
+        train['wide_embedding'] = train['cover'].progress_apply(
+            lambda x: get_img_embedding(x, self.wide_model))
+        test['wide_embedding'] = test.cover.progress_apply(
+            lambda x: get_img_embedding(x, self.wide_model))
 
         logger.info("generate bert feature ")
-        ###########################################
-        #          TODO: module 3 task 1.3        #
-        ###########################################
-        train['bert_embedding'] = 
-        test['bert_embedding'] = 
+        train['bert_embedding'] = train['text'].progress_apply(
+            lambda x: get_pretrain_embedding(x, self.bert_tonkenizer, self.bert
+                                             ))
+        test['bert_embedding'] = test['text'].progress_apply(
+            lambda x: get_pretrain_embedding(x, self.bert_tonkenizer, self.bert
+                                             ))
 
         logger.info("generate lda feature ")
-        ###########################################
-        #          TODO: module 3 task 1.4        #
-        ###########################################
         # 生成bag of word格式数据
-        train['bow'] = 
-        test['bow'] = 
+        train['bow'] = train['queryCutRMStopWord'].apply(
+            lambda x: self.ml_data.em.lda.id2word.doc2bow(x))
+        test['bow'] = test['queryCutRMStopWord'].apply(
+            lambda x: self.ml_data.em.lda.id2word.doc2bow(x))
         # 在bag of word 基础上得到lda的embedding
-        train['lda'] = 
-        test['lda'] = 
+        train['lda'] = list(
+            map(lambda doc: get_lda_features(self.ml_data.em.lda, doc),
+                train['bow']))
+        test['lda'] = list(
+            map(lambda doc: get_lda_features(self.ml_data.em.lda, doc),
+                test['bow']))
 
         logger.info("generate autoencoder feature ")
         # 获取到autoencoder 的embedding, 根据encoder 获取而不是decoder
-        ###########################################
-        #          TODO: module 3 task 1.5        #
-        ###########################################
-        train_ae =
-        test_ae =
+        train_ae = get_autoencoder_feature(
+            train,
+            self.ml_data.em.ae.max_features,
+            self.ml_data.em.ae.max_len,
+            self.ml_data.em.ae.encoder,
+            tokenizer=self.ml_data.em.ae.tokenizer)
+        test_ae = get_autoencoder_feature(
+            test,
+            self.ml_data.em.ae.max_features,
+            self.ml_data.em.ae.max_len,
+            self.ml_data.em.ae.encoder,
+            tokenizer=self.ml_data.em.ae.tokenizer)
 
         logger.info("formate data")
         #  将所有的特征拼接到一起
@@ -241,18 +256,19 @@ class Models(object):
         )
         model_name = None
         # 是否使用不平衡数据处理方式，上采样， 下采样， ensemble
-        ###########################################
-        #          TODO: module 4 task 1.1        #
-        ###########################################
         if imbalance_method == 'over_sampling':
             logger.info("Use SMOTE deal with unbalance data ")
-            self.X_train, self.y_train = 
-            self.X_test, self.y_test = 
+            self.X_train, self.y_train = SMOTE().fit_resample(
+                self.X_train, self.y_train)
+            self.X_test, self.y_test = SMOTE().fit_resample(
+                self.X_train, self.y_train)
             model_name = 'lgb_over_sampling'
         elif imbalance_method == 'under_sampling':
             logger.info("Use ClusterCentroids deal with unbalance data ")
-            self.X_train, self.y_train = 
-            self.X_test, self.y_test = 
+            self.X_train, self.y_train = ClusterCentroids(
+                random_state=0).fit_resample(self.X_train, self.y_train)
+            self.X_test, self.y_test = ClusterCentroids(
+                random_state=0).fit_resample(self.X_test, self.y_test)
             model_name = 'lgb_under_sampling'
         elif imbalance_method == 'ensemble':
             self.model = BalancedBaggingClassifier(
@@ -264,15 +280,18 @@ class Models(object):
         logger.info('search best param')
         # 使用set_params 将搜索到的最优参数设置为模型的参数
         if imbalance_method != 'ensemble':
-            ###########################################
-            #          TODO: module 4 task 1.2        #
-            ###########################################
+            param = self.param_search(search_method=search_method)
+            param['params']['num_leaves'] = int(param['params']['num_leaves'])
+            param['params']['max_depth'] = int(param['params']['max_depth'])
+            self.model = self.model.set_params(**param['params'])
         logger.info('fit model ')
         # 训练， 并输出模型的结果
         self.model.fit(self.X_train, self.y_train)
-        ###########################################
-        #          TODO: module 4 task 1.3        #
-        ###########################################
+        Test_predict_label = self.model.predict(self.X_test)
+        Train_predict_label = self.model.predict(self.X_train)
+        per, acc, recall, f1 = get_score(self.y_train, self.y_test,
+                                         Train_predict_label,
+                                         Test_predict_label)
         # 输出训练集的精确率
         logger.info('Train accuracy %s' % per)
         # 输出测试集的准确率
@@ -322,38 +341,50 @@ class Models(object):
             logger.info(model_name + '_' + 'test F1_score %s' % f1)
 
     def process(self, title, desc):
-        ###########################################
-        #          TODO: module 5 task 1.1        #
-        ###########################################
         # 处理数据, 生成模型预测所需要的特征
         df = pd.DataFrame([[title, desc]], columns=['title', 'desc'])
         df['text'] = df['title'] + df['desc']
-        df["queryCut"] = 
-        df["queryCutRMStopWord"] = 
+        df["queryCut"] = df["text"].apply(query_cut)
+        df["queryCutRMStopWord"] = df["queryCut"].apply(
+            lambda x:
+            [word for word in x if word not in self.ml_data.em.stopWords])
 
-        df_tfidf, df =
+        df_tfidf, df = get_embedding_feature(df, self.ml_data.em.tfidf,
+                                             self.ml_data.em.w2v)
 
         print("generate basic feature ")
-        df = 
+        df = get_basic_feature(df)
 
         print("generate modal feature ")
-        df['cover'] = 
+        df['cover'] = ''
 
-        df['res_embedding'] = 
+        df['res_embedding'] = df.cover.progress_apply(
+            lambda x: get_img_embedding(x, self.res_model))
 
-        df['resnext_embedding'] = 
+        df['resnext_embedding'] = df.cover.progress_apply(
+            lambda x: get_img_embedding(x, self.resnext_model))
 
-        df['wide_embedding'] = 
+        df['wide_embedding'] = df.cover.progress_apply(
+            lambda x: get_img_embedding(x, self.wide_model))
 
         print("generate bert feature ")
-        df['bert_embedding'] = 
+        df['bert_embedding'] = df.text.progress_apply(
+            lambda x: get_pretrain_embedding(x, self.bert_tonkenizer, self.bert
+                                             ))
 
         print("generate lda feature ")
-        df['bow'] = 
-        df['lda'] = 
+        df['bow'] = df['queryCutRMStopWord'].apply(
+            lambda x: self.ml_data.em.lda.id2word.doc2bow(x))
+        df['lda'] = list(
+            map(lambda doc: get_lda_features(self.ml_data.em.lda, doc),
+                df.bow))
 
         print("generate autoencoder feature ")
-        df_ae = 
+        df_ae = get_autoencoder_feature(df,
+                                        self.ml_data.em.ae.max_features,
+                                        self.ml_data.em.ae.max_len,
+                                        self.ml_data.em.ae.encoder,
+                                        tokenizer=self.ml_data.em.ae.tokenizer)
 
         print("formate data")
         df['labelIndex'] = 1
@@ -370,9 +401,9 @@ class Models(object):
         desc: input
         @return: label
         '''
-        ###########################################
-        #          TODO: module 5 task 1.1        #
-        ###########################################
+        inputs = self.process(title, desc)
+        label = self.ix2label[self.model.predict(inputs)[0]]
+        proba = np.max(self.model.predict_proba(inputs))
         return label, proba
 
     def save(self, model_name):
@@ -382,9 +413,7 @@ class Models(object):
         model_name, file name for saving
         @return: None
         '''
-        ###########################################
-        #          TODO: module 4 task 1.4        #
-        ###########################################
+        joblib.dump(self.model, root_path + '/model/ml_model/' + model_name)
 
     def load(self, path):
         '''
@@ -393,6 +422,4 @@ class Models(object):
         path: model path
         @return:None
         '''
-        ###########################################
-        #          TODO: module 4 task 1.4        #
-        ###########################################
+        self.model = joblib.load(path)

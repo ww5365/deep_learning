@@ -1,10 +1,10 @@
 '''
 @Author: your name
 @Date: 2020-06-18 21:15:35
-@LastEditTime: 2020-07-18 16:47:54
+@LastEditTime: 2020-07-06 14:08:35
 @LastEditors: xiaoyao jiang
 @Description: In User Settings Edit
-@FilePath: /bookClassification(TODO)/src/DL/models/bert.py
+@FilePath: /bookClassification/src/DL/models/bert.py
 '''
 # coding: UTF-8
 import torch.nn as nn
@@ -23,7 +23,12 @@ class Model(nn.Module):
         self.fc = nn.Linear(config.hidden_size, config.num_classes)
 
     def forward(self, x):
-        ###########################################
-        #          TODO: module 6 task 1.3        #
-        ###########################################
+        context = x[0]  # 输入的句子
+        mask = x[
+            1]  # 对padding部分进行mask，和句子一个size，padding部分用0表示，如：[1, 1, 1, 1, 0, 0]
+        token_type_ids = x[2]
+        _, pooled = self.bert(context,
+                              attention_mask=mask,
+                              token_type_ids=token_type_ids)
+        out = self.fc(pooled)
         return out
