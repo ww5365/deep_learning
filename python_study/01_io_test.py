@@ -1,5 +1,10 @@
 #-*- coding: utf8 -*-
 
+import os
+import sys
+
+
+
 '''
 dir():  dir([object])  --object: 对象、变量、类型  返回：属性列表list
 
@@ -22,7 +27,17 @@ class Foo(object):
             print("private function")
 
 
+def get_file_path():
+      print(os.path.dirname(__file__))
+      cur_path = os.path.abspath(os.path.dirname(__file__))
+      root_path = os.path.split(cur_path)[0]
+      what_path = os.path.split(root_path)[0]
+      print("root_path:", root_path, what_path)
+
+
 if __name__ == '__main__':
       
       ##dir function use case
       print("\n".join(dir(Foo))) ## 3个成员函数
+
+      get_file_path()
