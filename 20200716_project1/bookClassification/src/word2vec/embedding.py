@@ -21,6 +21,13 @@ from src.word2vec.autoencoder import AutoEncoder
 logger = create_logger(root_path + '/logs/embedding.log')
 
 
+'''
+1. 类定义，没用object 使用type？ 区别？
+
+参考：
+https://wiki.jikexueyuan.com/project/explore-python/Class/metaclass.html
+
+'''
 class SingletonMetaclass(type):
     '''
     @description: singleton
@@ -58,6 +65,9 @@ class Embedding(metaclass=SingletonMetaclass):
         @return:None
         '''
         logger.info('load data')
+
+        #https://www.cnblogs.com/qi-yuan-008/p/12410354.html concat read_csv 参考a
+        #dataFrame 类型
         self.data = pd.concat([
             pd.read_csv(root_path + '/data/train.tsv', sep='\t'),
             pd.read_csv(root_path + '/data/dev.tsv', sep='\t'),
