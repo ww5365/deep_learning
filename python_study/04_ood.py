@@ -52,6 +52,7 @@ class B(A):
     
     def public(self):
         print("B.public")
+    
 
 
 if __name__ == '__main__':
@@ -67,11 +68,11 @@ if __name__ == '__main__':
 
 
     ##私有变量的mangling
-    print("---------------")
+    print("*" * 30)
     b = B() ##输出什么？
 
-    print("---------------")
-    print("\n".join(dir(B)))
+    print("*" * 30)
+    print(" ".join(dir(B))) #类B中的所有成员
 
 
 

@@ -1,3 +1,4 @@
+#-*- coding: utf-8 -*-
 '''
 @Author: xiaoyao jiang
 @LastEditors: xiaoyao jiang
@@ -6,7 +7,13 @@
 @FilePath: /bookClassification/src/ML/main.py
 @Desciption: Machine Learning model main function
 '''
+import sys
+import os
 import argparse
+
+curPath = os.path.abspath(os.path.dirname(__file__))
+rootPath = os.path.split(curPath)[0]
+sys.path.append(os.path.split(rootPath)[0])
 
 from src.utils import config
 from src.utils.tools import create_logger
@@ -43,12 +50,20 @@ args = parser.parse_args()
 logger = create_logger(config.root_path + '/logs/main.log')
 
 if __name__ == '__main__':
-    feature_engineering = args.feature_engineering
+
+    feature_engineering = args.feature_engineering ## 这个参数开关是干啥的？
+
     m = Models(config.root_path + '/model/ml_model/' + args.model_name)
+    
     if feature_engineering:
+        
         m.unbalance_helper(imbalance_method=args.imbalance_method,
                            search_method=args.search_method)
+    
     else:
+        
+        ##tfidf
+
         X_train, X_test, y_train, y_test = m.ml_data.process_data(
             method='tfidf')
         logger.info('model select with tfidf')
@@ -57,7 +72,7 @@ if __name__ == '__main__':
                        y_train,
                        y_test,
                        feature_method='tfidf')
-
+        ##word2vec
         X_train, X_test, y_train, y_test = m.ml_data.process_data(
             method='word2vec')
         logger.info('model select with word2vec')
@@ -67,6 +82,7 @@ if __name__ == '__main__':
                        y_test,
                        feature_method='word2vec')
 
+        ##fasttext
         X_train, X_test, y_train, y_test = m.ml_data.process_data(
             method='fasttext')
         logger.info('model select with fasttext')

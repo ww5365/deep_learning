@@ -72,7 +72,9 @@ if __name__ == '__main__':
     id2word = gensim.corpora.Dictionary(data.text) #建立语料特征的索引字典
     corpus = [id2word.doc2bow(text) for text in data.text] #词袋模型的稀疏向量
     print(corpus)
-    print(id2word.token2id)
+    print(id2word.token2id) ##token到id映射
+
+    
 
 
 

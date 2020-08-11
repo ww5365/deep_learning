@@ -1,3 +1,4 @@
+#-*- coding: utf-8 -*-
 '''
 @Author: xiaoyao jiang
 @Date: 2020-04-08 17:22:54
@@ -47,7 +48,6 @@ class SingletonMetaclass(type):
         else:
             return self.__instance
 
-
 class Embedding(metaclass=SingletonMetaclass):
     def __init__(self):
         '''
@@ -78,7 +78,7 @@ class Embedding(metaclass=SingletonMetaclass):
         ])
         self.data["text"] = self.data['title'] + self.data['desc']
         self.data["text"] = self.data["text"].apply(query_cut)
-        self.data['text'] = self.data["text"].apply(lambda x: " ".join(x))
+        self.data['text'] = self.data["text"].apply(lambda x: " ".join(x))##保存了使用空格分割的切词结果
 
     def trainer(self):
         '''
@@ -101,7 +101,7 @@ class Embedding(metaclass=SingletonMetaclass):
         Fit the vectorizer/model to the training data and save the vectorizer/model 
         to a variable (returns sklearn.feature_extraction.text.TfidfVectorizer)
         输入形式：
-        * ['doc1', 'doc2', ..] docN都是分好词的，使用空格
+        * ['doc1', 'doc2', ..] docN都是分好词的，使用空格分割；list;
         * dataframe 某个列字段
 
         transform(): 
@@ -141,7 +141,7 @@ class Embedding(metaclass=SingletonMetaclass):
 
 
         logger.info('train word2vec')
-        self.data['text'] = self.data["text"].apply(lambda x: x.split(' '))
+        self.data['text'] = self.data["text"].apply(lambda x: x.split(' ')) ##[[word1,word2],[wordn..]]
         self.w2v = models.Word2Vec(min_count=2,
                                    window=5,
                                    size=300,
@@ -184,7 +184,8 @@ class Embedding(metaclass=SingletonMetaclass):
 
         输入：data.text  二维[[doc1_A,doc1_B][doc2_C,doc2_D]]矩阵 
 
-        2、
+        2、j 
+        https://radimrehurek.com/gensim/models/ldamulticore.html
 
         '''
         logger.info('train lda')
@@ -197,7 +198,7 @@ class Embedding(metaclass=SingletonMetaclass):
                                      chunksize=4000,
                                      passes=7,
                                      alpha='asymmetric')
-
+        ##lstm
         logger.info('train autoencoder')
         self.ae.train(self.data)
 

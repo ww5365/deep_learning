@@ -75,9 +75,29 @@ def read_file():
                   print("line33:", line)
                   line = f3.readline()
 
+'''
+1、创建目录：
+目录文件不存在的情况下，提前创建目录，再进行目录下文件的创建，读写操作
+'''
+
+def save_file():
+
+      #获取当前文件目录
+      cur_dir = os.path.dirname(__file__)
+      print(cur_dir)
+      
+      #创建tmp目录
+      full_dir = cur_dir + "/tmp"
+      if not os.path.exists(full_dir):
+            os.makedirs(full_dir)
+            print("full path: ", full_dir)
+
+      
+
 if __name__ == '__main__':
       
       ##dir function use case
       print("\n".join(dir(Foo))) ## 3个成员函数
       get_file_path()
       read_file()
+      save_file()

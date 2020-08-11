@@ -4,6 +4,10 @@
 
 ### Second, run `src/ML/main.py` to run all kinds of models.
 
+`python3 ./src/ML/main.py --feature_engineering True --search_method bayesian --unbalance True  --imbalance_method under_sampling --model_name lgb_under_sampling`
+
+
+
 ### Third, run `src/DL/train.py` to run bert model.
 
 
