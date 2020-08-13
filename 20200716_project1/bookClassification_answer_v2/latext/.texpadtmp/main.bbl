@@ -1,0 +1,119 @@
+\begin{thebibliography}{10}
+
+\bibitem{blei2003latent}
+{\sc Blei, D.~M., Ng, A.~Y., and Jordan, M.~I.}
+\newblock Latent dirichlet allocation.
+\newblock {\em Journal of machine Learning research 3}, Jan (2003), 993--1022.
+
+\bibitem{bojanowski2017enriching}
+{\sc Bojanowski, P., Grave, E., Joulin, A., and Mikolov, T.}
+\newblock Enriching word vectors with subword information.
+\newblock {\em Transactions of the Association for Computational Linguistics
+  5\/} (2017), 135--146.
+
+\bibitem{bourlard1988auto}
+{\sc Bourlard, H., and Kamp, Y.}
+\newblock Auto-association by multilayer perceptrons and singular value
+  decomposition.
+\newblock {\em Biological cybernetics 59}, 4-5 (1988), 291--294.
+
+\bibitem{DBLP:journals/corr/abs-1106-1813}
+{\sc Bowyer, K.~W., Chawla, N.~V., Hall, L.~O., and Kegelmeyer, W.~P.}
+\newblock {SMOTE:} synthetic minority over-sampling technique.
+\newblock {\em CoRR abs/1106.1813\/} (2011).
+
+\bibitem{chen2020generating}
+{\sc Chen, H., Zheng, G., and Ji, Y.}
+\newblock Generating hierarchical explanations on text classification via
+  feature interaction detection.
+\newblock {\em arXiv preprint arXiv:2004.02015\/} (2020).
+
+\bibitem{DBLP:journals/corr/abs-1810-04805}
+{\sc Devlin, J., Chang, M., Lee, K., and Toutanova, K.}
+\newblock {BERT:} pre-training of deep bidirectional transformers for language
+  understanding.
+\newblock {\em CoRR abs/1810.04805\/} (2018).
+
+\bibitem{friedman2001greedy}
+{\sc Friedman, J.~H.}
+\newblock Greedy function approximation: a gradient boosting machine.
+\newblock {\em Annals of statistics\/} (2001), 1189--1232.
+
+\bibitem{DBLP:journals/corr/HeZRS15}
+{\sc He, K., Zhang, X., Ren, S., and Sun, J.}
+\newblock Deep residual learning for image recognition.
+\newblock {\em CoRR abs/1512.03385\/} (2015).
+
+\bibitem{ke2017lightgbm}
+{\sc Ke, G., Meng, Q., Finley, T., Wang, T., Chen, W., Ma, W., Ye, Q., and Liu,
+  T.-Y.}
+\newblock Lightgbm: A highly efficient gradient boosting decision tree.
+\newblock In {\em Advances in neural information processing systems\/} (2017),
+  pp.~3146--3154.
+
+\bibitem{kiela2019supervised}
+{\sc Kiela, D., Bhooshan, S., Firooz, H., and Testuggine, D.}
+\newblock Supervised multimodal bitransformers for classifying images and text.
+\newblock {\em arXiv preprint arXiv:1909.02950\/} (2019).
+
+\bibitem{DBLP:journals/corr/Kim14f}
+{\sc Kim, Y.}
+\newblock Convolutional neural networks for sentence classification.
+\newblock {\em CoRR abs/1408.5882\/} (2014).
+
+\bibitem{mikolov2013efficient}
+{\sc Mikolov, T., Chen, K., Corrado, G., and Dean, J.}
+\newblock Efficient estimation of word representations in vector space.
+\newblock {\em arXiv preprint arXiv:1301.3781\/} (2013).
+
+\bibitem{DBLP:journals/corr/MikolovSCCD13}
+{\sc Mikolov, T., Sutskever, I., Chen, K., Corrado, G., and Dean, J.}
+\newblock Distributed representations of words and phrases and their
+  compositionality.
+\newblock {\em CoRR abs/1310.4546\/} (2013).
+
+\bibitem{paik2013novel}
+{\sc Paik, J.~H.}
+\newblock A novel tf-idf weighting scheme for effective ranking.
+\newblock In {\em Proceedings of the 36th international ACM SIGIR conference on
+  Research and development in information retrieval\/} (2013), pp.~343--352.
+
+\bibitem{DBLP:journals/corr/RibeiroSG16}
+{\sc Ribeiro, M.~T., Singh, S., and Guestrin, C.}
+\newblock "why should {I} trust you?": Explaining the predictions of any
+  classifier.
+\newblock {\em CoRR abs/1602.04938\/} (2016).
+
+\bibitem{snoek2012practical}
+{\sc Snoek, J., Larochelle, H., and Adams, R.~P.}
+\newblock Practical bayesian optimization of machine learning algorithms.
+\newblock In {\em Advances in neural information processing systems\/} (2012),
+  pp.~2951--2959.
+
+\bibitem{tsai2019MULT}
+{\sc Tsai, Y.-H.~H., Bai, S., Liang, P.~P., Kolter, J.~Z., Morency, L.-P., and
+  Salakhutdinov, R.}
+\newblock Multimodal transformer for unaligned multimodal language sequences.
+\newblock In {\em Proceedings of the 57th Annual Meeting of the Association for
+  Computational Linguistics (Volume 1: Long Papers)\/} (Florence, Italy, 7
+  2019), Association for Computational Linguistics.
+
+\bibitem{DBLP:journals/corr/XieGDTH16}
+{\sc Xie, S., Girshick, R.~B., Doll{\'{a}}r, P., Tu, Z., and He, K.}
+\newblock Aggregated residual transformations for deep neural networks.
+\newblock {\em CoRR abs/1611.05431\/} (2016).
+
+\bibitem{yang2019xlnet}
+{\sc Yang, Z., Dai, Z., Yang, Y., Carbonell, J., Salakhutdinov, R.~R., and Le,
+  Q.~V.}
+\newblock Xlnet: Generalized autoregressive pretraining for language
+  understanding.
+\newblock In {\em Advances in neural information processing systems\/} (2019),
+  pp.~5754--5764.
+
+\bibitem{zagoruyko2016wide}
+{\sc Zagoruyko, S., and Komodakis, N.}
+\newblock Wide residual networks.
+\newblock {\em arXiv preprint arXiv:1605.07146\/} (2016).
+
+\end{thebibliography}

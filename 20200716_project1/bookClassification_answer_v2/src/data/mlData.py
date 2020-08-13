@@ -1,7 +1,8 @@
+# -*- coding: utf-8 -*-
 '''
 @Author: your name
 @Date: 2020-04-08 17:21:28
-@LastEditTime: 2020-07-17 16:43:02
+@LastEditTime: 2020-07-08 09:02:14
 @LastEditors: xiaoyao jiang
 @Description: Process data then get feature
 @FilePath: /bookClassification/src/data/mlData.py
@@ -27,7 +28,6 @@ class MLData(object):
         em, new embedding class
         @return:None
         '''
-        # 加载embedding， 如果不训练， 则不处理数据
         self.debug_mode = debug_mode
         self.em = Embedding()
         self.em.load()
@@ -40,27 +40,22 @@ class MLData(object):
         @param {type}None
         @return: None
         '''
-        logger.info('preprocessor load data')
-
-        self.train = pd.read_csv(config.root_path + '/data/train.csv',
+        logger.info('load data')
+        self.train = pd.read_csv(config.root_path + '/data/train.tsv',
                                  sep='\t').dropna()
-        self.dev = pd.read_csv(config.root_path + '/data/dev.csv',
+        self.dev = pd.read_csv(config.root_path + '/data/dev.tsv',
                                sep='\t').dropna()
         if self.debug_mode:
             self.train = self.train.sample(n=1000).reset_index(drop=True)
             self.dev = self.dev.sample(n=100).reset_index(drop=True)
-        # 拼接数据
         self.train["text"] = self.train['title'] + self.train['desc']
         self.dev["text"] = self.dev['title'] + self.dev['desc']
-        # 分词
         self.train["queryCut"] = self.train["text"].apply(query_cut)
         self.dev["queryCut"] = self.dev["text"].apply(query_cut)
-        # 过滤停止词
         self.train["queryCutRMStopWord"] = self.train["queryCut"].apply(
             lambda x: [word for word in x if word not in self.em.stopWords])
         self.dev["queryCutRMStopWord"] = self.dev["queryCut"].apply(
             lambda x: [word for word in x if word not in self.em.stopWords])
-        # 生成label 与id的对应关系， 并保存到文件中， 如果存在这个文件则直接加载
         if os.path.exists(config.root_path + '/data/label2id.json'):
             labelNameToIndex = json.load(
                 open(config.root_path + '/data/label2id.json', encoding='utf-8'))
@@ -70,8 +65,9 @@ class MLData(object):
             labelNameToIndex = dict(zip(labelName,
                                         labelIndex))  # label的名字对应标签的字典
             with open(config.root_path + '/data/label2id.json', 'w', encoding='utf-8') as f:
-                json.dump({k : v for k, v in labelNameToIndex.items()}, f)
+                json.dump({k: v for k, v in labelNameToIndex.items()}, f)
         self.train["labelIndex"] = self.train['label'].map(labelNameToIndex)
+        # 将测试集中的label名字映射到标签并保存到列labelIndex中
         # 将测试集中的label名字映射到标签并保存到列labelIndex中
         self.dev["labelIndex"] = self.dev['label'].map(labelNameToIndex)
 
@@ -86,7 +82,6 @@ class MLData(object):
         y_train, label of train set
         y_test, label of test set
         '''
-        # 处理数据， 获取到数据的embedding， 如tfidf ,word2vec, fasttext
         X_train = self.get_feature(self.train, method)
         X_test = self.get_feature(self.dev, method)
         y_train = self.train["labelIndex"]

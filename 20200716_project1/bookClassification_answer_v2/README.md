@@ -3,56 +3,23 @@
 ### First, run `src/word2vec/embedding.py` to generate all word embedding (include word2vec, fasttext, tfidf, lda, autoencoder).
 
 ### Second, run `src/ML/main.py` to run all kinds of models.
-* 运行命令：`python3 ./src/ML/main.py --feature_engineering True --search_method bayesian --unbalance True  --imbalance_method under_sampling --model_name lgb_under_sampling`
-* 下载resnet模型: 三个都手动下载，放到/home/jovyan/.cache/torch/checkpoints目录下
-* 下载bert的预训练模型： [Bert](https://github.com/google-research/bert)里的Pre-trained models找到下载链接，中英文都有; [项目可用pytorch版本bert](https://s3.amazonaws.com/models.huggingface.co/bert/bert-base-chinese.tar.gz)，下载三个文件:
-bert_config.json(重命名config.json)  pytorch_model.bin  vocab.txt(另外下载)
 
 ### Third, run `src/DL/train.py` to run bert model.
 
 
-### 运行过程中的TIPs:
-
-* 报错1：
-```
-
-  File "/usr/local/lib/python3.6/dist-packages/gensim/models/utils_any2vec.py", line 220, in _word2vec_read_text
-    raise ValueError("invalid vector on line %s (is this really the text format?)" % line_no)
-ValueError: invalid vector on line 106 (is this really the text format?)
-
-解决：新载入gensim.word2vec时会报错：发现是空行，或者原来一些词向量的词就是数字，譬如-0.2121或 57851，所以一直导入不进去。只能自己用txt读入后，删除掉这一个空行。
-```
-* 报错2：
-  
-```
-
-solution: pytorch1.1.0 + torchvision0.3 平台不支持wide_resnet101_2  
- torchvision.models. 可以查看支持接口
-
-类似报错：
-AttributeError: 'Model' object has no attribute 'encoder'
-
-Model中没有成员函数encoder
- 
-```
-
-* 
-
-
-
 ## 代码结构介绍
-* data: 数据存放目录
-* model : 模型存放目录
-* logs : 日志存放目录
-* src : 核心代码部分
-* app.py : 代码部署部分
-* src/data : 数据处理部分
-* src/data/dataset.py : 主要用于深度学习的数据处理
-* src/data/mlData.py : 主要用于机器学习的数据处理
-* src/DL/ : 包含各类深度学习模型， 运行主入口为`src/DL/train.py`
-* src/ML/ : 包含各类机器学习模型， 运行主入口为`src/ML/main.py`
-* src/utils/ : 包含配置文件，特征工程函数，以及通用函数
-* src/word2vec/ : 包含各类embedding的训练，保存加载。运行主入口为`src/word2vec/embedding.py`
+`data`: 数据存放目录
+`model` : 模型存放目录
+`logs` : 日志存放目录
+`src` : 核心代码部分
+`app.py` : 代码部署部分
+`src/data` : 数据处理部分
+`src/data/dataset.py` : 主要用于深度学习的数据处理
+`src/data/mlData.py` : 主要用于机器学习的数据处理
+`src/DL/` : 包含各类深度学习模型， 运行主入口为`src/DL/train.py`
+`src/ML/` : 包含各类机器学习模型， 运行主入口为`src/ML/main.py`
+`src/utils/` : 包含配置文件，特征工程函数，以及通用函数
+`src/word2vec/` : 包含各类embedding的训练，保存加载。运行主入口为`src/word2vec/embedding.py`
 
 ## 作业
 在本次作业中， 你需要完成一下几项内容：

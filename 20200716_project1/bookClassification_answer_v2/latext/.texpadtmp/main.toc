@@ -1,0 +1,15 @@
+\babel@toc {UKenglish}{}
+\contentsline {section}{\numberline {1}项目描述与目标}{4}{section.1}%
+\contentsline {section}{\numberline {2}项目数据描述}{5}{section.2}%
+\contentsline {section}{\numberline {3}项目事宜}{6}{section.3}%
+\contentsline {subsection}{\numberline {3.1}项目的整个框架}{6}{subsection.3.1}%
+\contentsline {section}{\numberline {4}项目作业描述}{8}{section.4}%
+\contentsline {subsection}{\numberline {4.1}第一次作业}{9}{subsection.4.1}%
+\contentsline {subsection}{\numberline {4.2}第一次作业描述}{9}{subsection.4.2}%
+\contentsline {subsubsection}{\numberline {4.2.1}第一次作业涉及到的相关技术}{10}{subsubsection.4.2.1}%
+\contentsline {subsection}{\numberline {4.3}第二次作业}{15}{subsection.4.3}%
+\contentsline {subsubsection}{\numberline {4.3.1}第二次作业描述}{15}{subsubsection.4.3.1}%
+\contentsline {subsubsection}{\numberline {4.3.2}第二次作业涉及到的相关技术}{15}{subsubsection.4.3.2}%
+\contentsline {subsection}{\numberline {4.4}第三次作业}{18}{subsection.4.4}%
+\contentsline {subsubsection}{\numberline {4.4.1}第三次作业描述}{18}{subsubsection.4.4.1}%
+\contentsline {subsubsection}{\numberline {4.4.2}第三次作业涉及到的相关技术}{19}{subsubsection.4.4.2}%

@@ -1,0 +1,54 @@
+\documentclass[a4paper]{article}
+
+\input{style/ch_xelatex.tex}
+\input{style/scala.tex}
+\usepackage{style/pythonhighlight}
+\lstset{frame=, basicstyle={\footnotesize\ttfamily}}
+
+
+\usepackage{draftwatermark}
+\SetWatermarkText{贪心科技版权所有}
+\SetWatermarkScale{0.15}\includegraphics{main}
+
+\graphicspath{ {images/} }
+\usepackage{ctex}
+%-----------------------------------------BEGIN DOC----------------------------------------
+\renewcommand{\baselinestretch}{1.5}
+
+\begin{document}
+
+\renewcommand{\contentsname}{目\ 录}
+\renewcommand{\appendixname}{附录}
+\renewcommand{\appendixpagename}{附录}
+\renewcommand{\refname}{参考文献}
+\renewcommand{\figurename}{图}
+\renewcommand{\tablename}{表}
+\renewcommand{\today}{\number\year 年 \number\month 月 \number\day 日}
+
+\title{{\Huge 京东-贪心NLP项目实验手册{\large\linebreak\\}}{\Large 项目1：基于京东图书的文本分类\linebreak\linebreak}}
+%please write your name, Student #, and Class # in Authors, student ID, and class # respectively
+\author{\\项目设计和编写 : 修晔良\ 姜冰钰 \\
+后期编辑: 李文哲\\
+单\ 位: 贪心科技}
+\date{\today}
+\maketitle
+\newpage
+
+
+%-----------------------------------------ABSTRACT-------------------------------------
+
+%-----------------------------------------CONTENT-------------------------------------
+\begin{center}
+\tableofcontents\label{c}
+\end{center}
+\newpage
+
+\input{part1}
+\input{part2}
+\input{part3}
+\input{part4}
+
+\bibliographystyle{acm}
+\bibliography{reference}
+\end{document}
+
