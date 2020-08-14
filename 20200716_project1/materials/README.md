@@ -13,32 +13,48 @@ bert_config.json(重命名config.json)  pytorch_model.bin  vocab.txt(另外下�
 
 ### 运行过程中的TIPs:
 
-* 报错1：
+* 报错解决记录：
+* 
 ```
+case1:
+ File "/home/user10000410/notespace/bookClassification_answer/src/word2vec/autoencoder.py", line 82, in save
+    joblib.dump(self.tokenizer, root_path + '/model/embedding/tokenizer')
+  File "/usr/local/lib/python3.6/dist-packages/joblib/numpy_pickle.py", line 479, in dump
+    with open(filename, 'wb') as f:
+FileNotFoundError: [Errno 2] No such file or directory: '/home/user10000410/notespace/bookClassification_answer/model/embedding/tokenize
+解决：在model下创建个embedding,bert,ml_model目录；如果没有目录，是否判断，先创建？不至于抛出异常。
 
+case2:
+AttributeError: module 'torchvision.models' has no attribute 'wide_resnet101_2'
+AttributeError: 'Model' object has no attribute **
+
+solution1: pytorch1.1.0 + torchvision0.3 平台不支持wide_resnet101_2 torchvision.models. 可以查看支持接口
+solution2: Model中没有成员函数encoder
+
+case3:
   File "/usr/local/lib/python3.6/dist-packages/gensim/models/utils_any2vec.py", line 220, in _word2vec_read_text
     raise ValueError("invalid vector on line %s (is this really the text format?)" % line_no)
 ValueError: invalid vector on line 106 (is this really the text format?)
 
 解决：新载入gensim.word2vec时会报错：发现是空行，或者原来一些词向量的词就是数字，譬如-0.2121或 57851，所以一直导入不进去。只能自己用txt读入后，删除掉这一个空行。
+
+case4:
+  File "./src/ML/main.py", line 14, in <module>
+    from src.utils import config
+ModuleNotFoundError: No module named 'src'
+
+solution: 因为在import src时，不在路径内，同时也不能执行__init__.py，所以手工加入下面代码到main.py中
+ curPath = os.path.abspath(os.path.dirname(__file__))
+ rootPath = os.path.split(curPath)[0]
+ sys.path.append(os.path.split(rootPath)[0])
+
+ case5:
+    raise ValueError("invalid vector on line %s (is this really the text format?)" % line_no)
+ValueError: invalid vector on line 106 (is this really the text format?)
+
+soulution: w2v.bin模型第106行时空行，手动删除；
+
 ```
-* 报错2：
-  
-```
-
-solution: pytorch1.1.0 + torchvision0.3 平台不支持wide_resnet101_2  
- torchvision.models. 可以查看支持接口
-
-类似报错：
-AttributeError: 'Model' object has no attribute 'encoder'
-
-Model中没有成员函数encoder
- 
-```
-
-* 
-
-
 
 ## 代码结构介绍
 * data: 数据存放目录

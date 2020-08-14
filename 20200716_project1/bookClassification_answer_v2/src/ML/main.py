@@ -9,8 +9,13 @@
 '''
 import argparse
 import sys
-sys.path.append("..") 
-sys.path.append("../..") 
+import os
+#sys.path.append("..") 
+#sys.path.append("../..") 
+curPath = os.path.abspath(os.path.dirname(__file__))
+rootPath = os.path.split(curPath)[0]
+sys.path.append(os.path.split(rootPath)[0])
+
 from src.utils import config
 from src.utils.tools import create_logger
 from src.ML.models import Models
