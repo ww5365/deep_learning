@@ -24,7 +24,8 @@ class Model(nn.Module):
         self.fc = nn.Linear(config.hidden_size, config.num_classes)
 
     def forward(self, x):
-        context = x[0]  # 杈撳叆鐨勫彞瀛�        mask = x[1]  # 瀵筽adding閮ㄥ垎杩涜�mask锛屽拰鍙ュ瓙涓�釜size锛宲adding閮ㄥ垎鐢�琛ㄧず锛屽�锛歔1, 1, 1, 1, 0, 0]
+        context = x[0]  # 输入的句子
+        mask = x[1]  # 对padding部分进行mask，和句子一个size，padding部分用0表示，如：[1, 1, 1, 1, 0, 0]
         token_type_ids = x[2]
         _, pooled = self.roberta(context, attention_mask=mask, token_type_ids=token_type_ids)
         out = self.fc(pooled)

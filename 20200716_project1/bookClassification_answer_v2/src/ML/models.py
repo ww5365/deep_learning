@@ -2,11 +2,11 @@
 '''
 @Author: xiaoyao jiang
 @Date: 2020-04-08 19:39:30
-@LastEditTime: 2020-07-08 18:32:37
-@LastEditors: xiaoyao jiang
+LastEditTime: 2020-08-13 23:20:30
+LastEditors: xiaoyao jiang
 @Description: There are two options. One is using pretrained embedding as feature to compare common ML models.
               The other is using feature engineering + param search tech + imbanlance to train a liaghtgbm model.
-@FilePath: /bookClassification/src/ML/models.py
+FilePath: /bookClassification/src/ML/models.py
 '''
 import os
 
@@ -25,9 +25,8 @@ from sklearn.naive_bayes import MultinomialNB
 from sklearn.svm import SVC
 from sklearn.tree import DecisionTreeClassifier
 from transformers import BertModel, BertTokenizer
-import sys
-sys.path.append("../..")
-sys.path.extend([os.path.join(root, name) for root, dirs, _ in os.walk("../") for name in dirs])
+
+from __init__ import *
 from src.data.mlData import MLData
 from src.utils import config
 from src.utils.config import root_path
@@ -56,62 +55,47 @@ class Models(object):
         ml_data: new mldata class
         @return: No return
         '''
+        # 加载图像处理模型， resnet, resnext, wide resnet， 如果支持cuda, 则将模型加载到cuda中
         self.res_model = torchvision.models.resnet152(
-            pretrained=True)  # res model for modal feature
+            pretrained=True)  # res model for modal feature [1* 1000]
         self.res_model = self.res_model.to(config.device)
         self.resnext_model = torchvision.models.resnext101_32x8d(
             pretrained=True)
         self.resnext_model = self.resnext_model.to(config.device)
-        self.wide_model = torchvision.models.wide_resnet101_2(pretrained=True)
+
+        #self.wide_model = torchvision.models.wide_resnet101_2(pretrained=True)
+        self.wide_model = torchvision.models.resnet101(pretrained=True)
         self.wide_model = self.wide_model.to(config.device)
+        # 加载 bert 模型， 如果支持cuda, 则将模型加载到cuda中
         self.bert_tonkenizer = BertTokenizer.from_pretrained(config.root_path +
                                                              '/model/bert')
         self.bert = BertModel.from_pretrained(config.root_path + '/model/bert')
         self.bert = self.bert.to(config.device)
 
+        # 初始化 MLdataset 类， debug_mode为true 则使用部分数据， train_mode表示是否训练
         self.ml_data = MLData(debug_mode=True, train_mode=train_mode)
-        if not train_mode:
+        # 如果不训练， 则加载训练好的模型，进行预测
+        if train_mode:
+            self.model = lgb.LGBMClassifier(objective='multiclass',
+                                            n_jobs=10,
+                                            num_class=33,
+                                            num_leaves=30,
+                                            reg_alpha=10,
+                                            reg_lambda=200,
+                                            max_depth=3,
+                                            learning_rate=0.05,
+                                            n_estimators=2000,
+                                            bagging_freq=1,
+                                            bagging_fraction=0.9,
+                                            feature_fraction=0.8,
+                                            seed=1440)
+
+        else:
             self.load(model_path)
             labelNameToIndex = json.load(
                 open(config.root_path + '/data/label2id.json',
                      encoding='utf-8'))
             self.ix2label = {v: k for k, v in labelNameToIndex.items()}
-        else:
-            if feature_engineer:
-                self.model = lgb.LGBMClassifier(objective='multiclass',
-                                                n_jobs=10,
-                                                num_class=33,
-                                                num_leaves=30,
-                                                reg_alpha=10,
-                                                reg_lambda=200,
-                                                max_depth=3,
-                                                learning_rate=0.05,
-                                                n_estimators=2000,
-                                                bagging_freq=1,
-                                                bagging_fraction=0.9,
-                                                feature_fraction=0.8,
-                                                seed=1440)
-            else:
-                self.models = [
-                    RandomForestClassifier(n_estimators=500,
-                                           max_depth=5,
-                                           random_state=0),
-                    LogisticRegression(solver='liblinear', random_state=0),
-                    MultinomialNB(),
-                    SVC(),
-                    lgb.LGBMClassifier(objective='multiclass',
-                                       n_jobs=10,
-                                       num_class=33,
-                                       num_leaves=30,
-                                       reg_alpha=10,
-                                       reg_lambda=200,
-                                       max_depth=3,
-                                       learning_rate=0.05,
-                                       n_estimators=2000,
-                                       bagging_freq=1,
-                                       bagging_fraction=0.8,
-                                       feature_fraction=0.8),
-                ]
 
     def feature_engineer(self):
         '''
@@ -123,40 +107,61 @@ class Models(object):
         y_train, label of train set
         y_test, label of test set
         '''
+
         logger.info("generate embedding feature ")
+        # 获取tfidf 特征， word2vec 特征， word2vec不进行任何聚合
         train_tfidf, train = get_embedding_feature(self.ml_data.train,
                                                    self.ml_data.em.tfidf,
                                                    self.ml_data.em.w2v)
-        test_tfidf, test = get_embedding_feature(self.ml_data.test,
+        test_tfidf, test = get_embedding_feature(self.ml_data.dev,
                                                  self.ml_data.em.tfidf,
                                                  self.ml_data.em.w2v)
 
+        logger.info("generate autoencoder feature ")
+        # 获取到autoencoder 的embedding, 根据encoder 获取而不是decoder
+        train_ae = get_autoencoder_feature(
+            train,
+            self.ml_data.em.ae.max_features,
+            self.ml_data.em.ae.max_len,
+            self.ml_data.em.ae.encoder,
+            tokenizer=self.ml_data.em.ae.tokenizer)
+        test_ae = get_autoencoder_feature(
+            test,
+            self.ml_data.em.ae.max_features,
+            self.ml_data.em.ae.max_len,
+            self.ml_data.em.ae.encoder,
+            tokenizer=self.ml_data.em.ae.tokenizer)
+
         logger.info("generate basic feature ")
+        # 获取nlp 基本特征
         train = get_basic_feature(train)
         test = get_basic_feature(test)
 
         logger.info("generate modal feature ")
+        # 加载图书封面的文件
         cover = os.listdir(config.root_path + '/data/book_cover/')
+        # 根据title 匹配图书封面
         train['cover'] = train['title'].progress_apply(
             lambda x: config.root_path + '/data/book_cover/' + x + '.jpg'
             if x + '.jpg' in cover else '')
-        test['cover'] = test.title.progress_apply(
+        test['cover'] = test['title'].progress_apply(
             lambda x: config.root_path + '/data/book_cover/' + x + '.jpg'
             if x + '.jpg' in cover else '')
 
+        # 根据封面获取封面的embedding
         train['res_embedding'] = train['cover'].progress_apply(
             lambda x: get_img_embedding(x, self.res_model))
-        test['res_embedding'] = test.cover.progress_apply(
+        test['res_embedding'] = test['cover'].progress_apply(
             lambda x: get_img_embedding(x, self.res_model))
 
         train['resnext_embedding'] = train['cover'].progress_apply(
             lambda x: get_img_embedding(x, self.resnext_model))
-        test['resnext_embedding'] = test.cover.progress_apply(
+        test['resnext_embedding'] = test['cover'].progress_apply(
             lambda x: get_img_embedding(x, self.resnext_model))
 
         train['wide_embedding'] = train['cover'].progress_apply(
             lambda x: get_img_embedding(x, self.wide_model))
-        test['wide_embedding'] = test.cover.progress_apply(
+        test['wide_embedding'] = test['cover'].progress_apply(
             lambda x: get_img_embedding(x, self.wide_model))
 
         logger.info("generate bert feature ")
@@ -168,10 +173,12 @@ class Models(object):
                                              ))
 
         logger.info("generate lda feature ")
+        # 生成bag of word格式数据
         train['bow'] = train['queryCutRMStopWord'].apply(
             lambda x: self.ml_data.em.lda.id2word.doc2bow(x))
         test['bow'] = test['queryCutRMStopWord'].apply(
             lambda x: self.ml_data.em.lda.id2word.doc2bow(x))
+        # 在bag of word 基础上得到lda的embedding
         train['lda'] = list(
             map(lambda doc: get_lda_features(self.ml_data.em.lda, doc),
                 train['bow']))
@@ -179,23 +186,11 @@ class Models(object):
             map(lambda doc: get_lda_features(self.ml_data.em.lda, doc),
                 test['bow']))
 
-        logger.info("generate autoencoder feature ")
-        train_ae = get_autoencoder_feature(
-            train,
-            self.ml_data.em.ae.max_features,
-            self.ml_data.em.ae.max_len,
-            self.ml_data.em.ae.model,
-            tokenizer=self.ml_data.em.ae.tokenizer)
-        test_ae = get_autoencoder_feature(
-            test,
-            self.ml_data.em.ae.max_features,
-            self.ml_data.em.ae.max_len,
-            self.ml_data.em.ae.model,
-            tokenizer=self.ml_data.em.ae.tokenizer)
-
         logger.info("formate data")
+        #  将所有的特征拼接到一起
         train = formate_data(train, train_tfidf, train_ae)
-        train = formate_data(test, train_tfidf, test_ae)
+        test = formate_data(test, test_tfidf, test_ae)
+        #  生成训练，测试的数据
         cols = [x for x in train.columns if str(x) not in ['labelIndex']]
         X_train = train[cols]
         X_test = test[cols]
@@ -212,6 +207,7 @@ class Models(object):
         search_method: two options. grid or bayesian optimization
         @return: None
         '''
+        # 使用网格搜索 或者贝叶斯优化 寻找最优参数
         if search_method == 'grid':
             logger.info("use grid search")
             self.model = Grid_Train_model(self.model, self.X_train,
@@ -237,9 +233,11 @@ class Models(object):
         @return: None
         '''
         logger.info("get all freature")
+        # 生成所有feature
         self.X_train, self.X_test, self.y_train, self.y_test = self.feature_engineer(
         )
         model_name = None
+        # 是否使用不平衡数据处理方式，上采样， 下采样， ensemble
         if imbalance_method == 'over_sampling':
             logger.info("Use SMOTE deal with unbalance data ")
             self.X_train, self.y_train = SMOTE().fit_resample(
@@ -262,10 +260,15 @@ class Models(object):
                 random_state=0)
             model_name = 'ensemble'
         logger.info('search best param')
+        # 使用set_params 将搜索到的最优参数设置为模型的参数
         if imbalance_method != 'ensemble':
-            param = self.param_search(search_method=search_method)
-            param['params']['num_leaves'] = int(param['params']['num_leaves'])
-            param['params']['max_depth'] = int(param['params']['max_depth'])
+            # param = self.param_search(search_method=search_method)
+            # param['params']['num_leaves'] = int(param['params']['num_leaves'])
+            # param['params']['max_depth'] = int(param['params']['max_depth'])
+            param = {}
+            param['params'] = {}
+            param['params']['num_leaves'] = 3
+            param['params']['max_depth'] = 5
             self.model = self.model.set_params(**param['params'])
         logger.info('fit model ')
         self.model.fit(self.X_train, self.y_train)
@@ -284,44 +287,8 @@ class Models(object):
         logger.info('test F1_score %s' % f1)
         self.save(model_name)
 
-    def model_select(self,
-                     X_train,
-                     X_test,
-                     y_train,
-                     y_test,
-                     feature_method='tf-idf'):
-        '''
-        @description: using different embedding feature to train common ML models
-        @param {type}
-        X_train, feature of train set
-        X_test, feature of test set
-        y_train, label of train set
-        y_test, label of test set
-        feature_method, three options , tfidf, word2vec and fasttext
-        @return: None
-        '''
-        for model in self.models:
-            model_name = model.__class__.__name__
-            print(model_name)
-            clf = model.fit(X_train, y_train)
-            Test_predict_label = clf.predict(X_test)
-            Train_predict_label = clf.predict(X_train)
-            per, acc, recall, f1 = get_score(y_train, y_test,
-                                             Train_predict_label,
-                                             Test_predict_label)
-            # 输出训练集的准确率
-            logger.info(model_name + '_' + 'Train accuracy %s' % per)
-
-            # 输出测试集的准确率
-            logger.info(model_name + '_' + ' test accuracy %s' % acc)
-
-            # 输出recall
-            logger.info(model_name + '_' + 'test recall %s' % recall)
-
-            # 输出F1-score
-            logger.info(model_name + '_' + 'test F1_score %s' % f1)
-
     def process(self, title, desc):
+        # 处理数据, 生成模型预测所需要的特征
         df = pd.DataFrame([[title, desc]], columns=['title', 'desc'])
         df['text'] = df['title'] + df['desc']
         df["queryCut"] = df["text"].apply(query_cut)
@@ -329,15 +296,14 @@ class Models(object):
             lambda x:
             [word for word in x if word not in self.ml_data.em.stopWords])
 
-        train_tfidf, df = get_embedding_feature(df, self.ml_data.em.tfidf,
-                                                self.ml_data.em.w2v)
+        df_tfidf, df = get_embedding_feature(df, self.ml_data.em.tfidf,
+                                             self.ml_data.em.w2v)
 
         print("generate basic feature ")
         df = get_basic_feature(df)
 
         print("generate modal feature ")
         df['cover'] = ''
-
         df['res_embedding'] = df.cover.progress_apply(
             lambda x: get_img_embedding(x, self.res_model))
 
@@ -363,19 +329,19 @@ class Models(object):
         df_ae = get_autoencoder_feature(df,
                                         self.ml_data.em.ae.max_features,
                                         self.ml_data.em.ae.max_len,
-                                        self.ml_data.em.ae.model,
+                                        self.ml_data.em.ae.encoder,
                                         tokenizer=self.ml_data.em.ae.tokenizer)
 
         print("formate data")
         df['labelIndex'] = 1
-        df = formate_data(df, train_tfidf, df_ae)
+        df = formate_data(df, df_tfidf, df_ae)
         cols = [x for x in df.columns if str(x) not in ['labelIndex']]
         X_train = df[cols]
         return X_train
 
     def predict(self, title, desc):
         '''
-        @description: for a given input, predict its label
+        @description: 根据输入的title, desc 预测图书的类别
         @param {type}
         title, input
         desc: input

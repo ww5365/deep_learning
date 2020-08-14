@@ -2,7 +2,7 @@
 '''
 @Author: xiaoyao jiang
 @Date: 2020-04-09 17:45:10
-@LastEditTime: 2020-07-02 21:45:53
+@LastEditTime: 2020-07-17 16:34:45
 @LastEditors: xiaoyao jiang
 @Description: main
 @FilePath: /bookClassification/src/DL/train.py
@@ -11,12 +11,12 @@ import time
 import torch
 import numpy as np
 import pandas as pd
-from train_helper import train, init_network
 from importlib import import_module
 import argparse
 from torch.utils.data import DataLoader
 import joblib
 from src.data.dataset import MyDataset, collate_fn
+from src.DL.train_helper import train, init_network
 from src.data.dictionary import Dictionary
 from src.utils.tools import create_logger
 from src.utils import config

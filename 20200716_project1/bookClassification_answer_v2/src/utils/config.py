@@ -5,7 +5,7 @@ from __future__ import (absolute_import, unicode_literals)
 '''
 @Author: xiaoyao jiang
 @Date: 2020-04-08 15:17:27
-@LastEditTime: 2020-07-07 14:45:18
+@LastEditTime: 2020-07-17 16:29:29
 @LastEditors: xiaoyao jiang
 @Description: all model config
 @FilePath: /bookClassification/src/utils/config.py
@@ -20,7 +20,7 @@ root_path = os.path.split(os.path.split(curPath)[0])[0]
 
 train_file = root_path + '/data/train_clean.tsv'
 dev_file = root_path + '/data/dev_clean.tsv'
-test_file = root_path + '/data/test_clean.tsv'
+test_file = root_path + '/data/dev.csv'
 stopWords_file = root_path + '/data/stopwords.txt'
 log_dir = root_path + '/logs/'
 

@@ -3,10 +3,16 @@
 @Author: xiaoyao jiang
 @LastEditors: xiaoyao jiang
 @Date: 2020-06-18 21:15:35
-@LastEditTime: 2020-07-06 14:05:11
+@LastEditTime: 2020-07-17 16:34:38
 @FilePath: /bookClassification/src/DL/predict.py
-@Desciption:  
+@Desciption:
 '''
+from src.utils import config
+import torch
+from transformers import BertTokenizer
+from src.DL.models.bert import Model
+
+
 class Predict(object):
     def __init__(self,
                  model_path=config.root_path + '/model/saved_dict/bert.ckpt',
@@ -15,8 +21,9 @@ class Predict(object):
         self.model_path = model_path
         self.tokenizer = BertTokenizer.from_pretrained(bert_path)
         self.is_cuda = is_cuda
-        conf = Config(dataset=config.root_path + '/')
-        self.model = Model(conf).to(config.device)
+        config.bert_path = config.root_path + '/model/bert/'
+        config.hidden_size = 768
+        self.model = Model(config).to(config.device)
         checkpoint = torch.load(self.model_path)
         self.model.load_state_dict(checkpoint, strict=False)
         self.model.eval()

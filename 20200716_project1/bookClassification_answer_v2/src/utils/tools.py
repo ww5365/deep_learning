@@ -2,10 +2,10 @@
 '''
 @Author: xiaoyao jiang
 @Date: 2020-04-08 15:35:24
-@LastEditTime: 2020-07-08 14:13:09
-@LastEditors: xiaoyao jiang
+LastEditTime: 2020-08-13 23:20:18
+LastEditors: xiaoyao jiang
 @Description: tools
-@FilePath: /bookClassification/src/utils/tools.py
+FilePath: /bookClassification/src/utils/tools.py
 '''
 
 import logging
@@ -20,7 +20,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import torch
-#from bayes_opt import BayesianOptimization
+from bayes_opt import BayesianOptimization
 from sklearn import metrics
 from sklearn.feature_selection import RFECV
 from sklearn.model_selection import GridSearchCV, StratifiedKFold
@@ -43,6 +43,7 @@ def get_score(Train_label, Test_label, Train_predict_label,
     Test_label, ground truth label of test dataset
     @return:acc, f1_score
     '''
+    # 输出模型的准确率， 精确率，召回率， f1_score
     return metrics.accuracy_score(
         Train_label, Train_predict_label), metrics.accuracy_score(
             Test_label, Test_predict_label), metrics.recall_score(
@@ -54,7 +55,7 @@ def get_score(Train_label, Test_label, Train_predict_label,
 
 def query_cut(query):
     '''
-    @description: word segment
+    @description: word segment 分词
     @param {type} query: input data
     @return:
     list of cut word
@@ -117,6 +118,7 @@ def clean_str(string):
 
 
 def strQ2B(ustring):
+    # 全角 半角符号 转换
     ss = []
     for s in ustring:
         rstring = ""
@@ -138,6 +140,8 @@ def wam(sentence, w2v_model, method='mean', aggregate=True):
     @param {type}
     sentence: 以空格分割的句子
     w2v_model: word2vec模型
+    method： 聚合方法 mean 或者max
+    aggregate: 是否进行聚合
     @return:
     '''
     arr = np.array([
@@ -197,23 +201,31 @@ def Grid_Train_model(model, Train_features, Test_features, Train_label,
 
 
 def bayes_parameter_opt_lgb(trn_data,
-                            init_round=15,
-                            opt_round=25,
+                            init_round=3,
+                            opt_round=5,
                             n_folds=5,
                             random_seed=6,
                             n_estimators=10000,
-                            learning_rate=0.05,
-                            output_process=False):
-    # parameters
+                            learning_rate=0.05):
+    # 定义搜索参数
     def lgb_eval(num_leaves, feature_fraction, bagging_fraction, max_depth,
                  lambda_l1, lambda_l2, min_split_gain, min_child_weight):
         params = {
-            'application': 'multiclass',
-            'num_iterations': n_estimators,
-            'learning_rate': learning_rate,
-            'early_stopping_round': 100,
-            'num_class': len([x.strip() for x in open(config.root_path + '/data/class.txt', encoding='utf-8').readlines()]),
-            'metric': 'multi_logloss'
+            'application':
+            'multiclass',
+            'num_iterations':
+            n_estimators,
+            'learning_rate':
+            learning_rate,
+            'early_stopping_round':
+            100,
+            'num_class':
+            len([
+                x.strip() for x in open(config.root_path +
+                                        '/data/class.txt').readlines()
+            ]),
+            'metric':
+            'multi_logloss'
         }
         params["num_leaves"] = int(round(num_leaves))
         params['feature_fraction'] = max(min(feature_fraction, 1), 0)
@@ -221,6 +233,8 @@ def bayes_parameter_opt_lgb(trn_data,
         params['max_depth'] = int(round(max_depth))
         params['lambda_l1'] = max(lambda_l1, 0)
         params['lambda_l2'] = max(lambda_l2, 0)
+        params['min_split_gain'] = min_split_gain
+        params['min_child_weight'] = min_child_weight
         cv_result = lgb.cv(params,
                            trn_data,
                            nfold=n_folds,
@@ -229,22 +243,22 @@ def bayes_parameter_opt_lgb(trn_data,
                            verbose_eval=200)
         return max(cv_result['multi_logloss-mean'])
         # range
-
+    # 搜索参数
     lgbBO = BayesianOptimization(lgb_eval, {
-        'num_leaves': (24, 31),
-        'feature_fraction': (0.5, 0.9),
-        'bagging_fraction': (0.6, 1),
-        'max_depth': (2, 5),
-        'lambda_l1': (1, 30),
-        'lambda_l2': (1, 50),
-    },random_state=0)
+        'num_leaves': (24, 45),
+        'feature_fraction': (0.1, 0.9),
+        'bagging_fraction': (0.8, 1),
+        'max_depth': (5, 8.99),
+        'lambda_l1': (0, 5),
+        'lambda_l2': (0, 3),
+        'min_split_gain': (0.001, 0.1),
+        'min_child_weight': (5, 50)
+    },
+                                 random_state=0)
     # optimize
     lgbBO.maximize(init_points=init_round, n_iter=opt_round)
-    # output optimization process
-    if output_process:
-        lgbBO.points_to_csv("bayes_opt_result.csv")
     # return best parameters
-    print(lgbBO.max)
+    # print(lgbBO.max)
     return lgbBO.max
 
 
@@ -276,6 +290,7 @@ bayes_cv_tuner = BayesSearchCV(
     refit=True)
 
 
+# 递进特征筛选
 def rfecv_opt(model, n_jobs, X, y, cv=StratifiedKFold(2)):
     rfecv = RFECV(estimator=model,
                   step=1,
@@ -309,15 +324,20 @@ def routine(X, y, n_iter_max, n_jobs):
     for i in range(n_iter_max):
         print('Currently on iteration', i + 1, 'of', n_iter_max, '.')
         if i == 0:
-            model = lgb.LGBMClassifier(max_depth=-1,
-                                       learning_rate=0.1,
-                                       objective='multiclass',
-                                       silent=False,
-                                       metric='None',
-                                       num_class=len([x.strip() for x in open(config.root_path + '/data/class.txt', encoding='utf-8').readlines()]),
-                                       n_jobs=n_jobs,
-                                       n_estimators=8000,
-                                       class_weight='unbalanced')
+            model = lgb.LGBMClassifier(
+                max_depth=-1,
+                learning_rate=0.1,
+                objective='multiclass',
+                silent=False,
+                metric='None',
+                num_class=len([
+                    x.strip()
+                    for x in open(config.root_path + '/data/class.txt',
+                                  encoding='utf-8').readlines()
+                ]),
+                n_jobs=n_jobs,
+                n_estimators=8000,
+                class_weight='unbalanced')
         else:
             print('Adjusting model.')
             X_provi = X[imp_columns]
@@ -350,9 +370,10 @@ def routine(X, y, n_iter_max, n_jobs):
     return list_models, list_scores_max, list_features
 
 
-def formate_data(train, train_tfidf, train_ae):
+def formate_data(data, tfidf, ae):
+    # 将数据拼接到一起
     Data = pd.concat([
-        train[[
+        data[[
             'labelIndex', 'length', 'capitals', 'caps_vs_length',
             'num_exclamation_marks', 'num_question_marks', 'num_punctuation',
             'num_symbols', 'num_words', 'num_unique_words', 'words_vs_unique',
@@ -360,19 +381,18 @@ def formate_data(train, train_tfidf, train_ae):
             'adjectives_vs_length', 'verbs_vs_length', 'nouns_vs_words',
             'adjectives_vs_words', 'verbs_vs_words', 'count_words_title',
             'mean_word_len', 'punct_percent'
-        ]], train_tfidf, train_ae
+        ]], tfidf, ae
     ] + [
         pd.DataFrame(
-            train[i].tolist(),
-            columns=[i + str(x) for x in range(train[i].iloc[0].shape[0])])
+            data[i].tolist(),
+            columns=[i + str(x) for x in range(data[i].iloc[0].shape[0])])
         for i in [
             'w2v_label_mean', 'w2v_label_max', 'w2v_mean', 'w2v_max',
             'w2v_win_2_mean', 'w2v_win_3_mean', 'w2v_win_4_mean',
             'w2v_win_2_max', 'w2v_win_3_max', 'w2v_win_4_max', 'res_embedding',
-            'resnext_embedding', 'wide_embedding', 'bert_embedding', 'lda'
+            'resnext_embedding', 'wide_embedding', 'lda', 'bert_embedding'
         ]
-    ],
-                      axis=1).fillna(0.0)
+    ], axis=1).fillna(0.0)
     return Data
 
 
@@ -380,6 +400,10 @@ def format_data(data, max_features, maxlen, tokenizer=None, shuffle=False):
     '''
     @description: use for autoencoder
     @param {type}
+    max_features： 最大的特征的个数
+    maxlen： 最大长度
+    tokenizer： 分词器
+    shuffle： 是否打乱顺序
     @return:
     '''
     if shuffle:

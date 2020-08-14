@@ -2,7 +2,7 @@
 '''
 @Author: xiaoyao jiang
 @Date: 2020-04-08 17:22:54
-@LastEditTime: 2020-07-07 17:40:22
+@LastEditTime: 2020-07-18 09:50:43
 @LastEditors: xiaoyao jiang
 @Description: train embedding & tfidf & autoencoder
 @FilePath: /bookClassification/src/word2vec/embedding.py
@@ -47,7 +47,9 @@ class Embedding(metaclass=SingletonMetaclass):
         @param {type} None
         @return: None
         '''
+        # 停止词
         self.stopWords = open(root_path + '/data/stopwords.txt', encoding='utf-8').readlines()
+        # autuencoder
         self.ae = AutoEncoder()
 
     def load_data(self):
@@ -64,7 +66,7 @@ class Embedding(metaclass=SingletonMetaclass):
         ])
         self.data["text"] = self.data['title'] + self.data['desc']
         self.data["text"] = self.data["text"].apply(query_cut)
-        self.data['text'] = self.data.text.apply(lambda x: " ".join(x))
+        self.data['text'] = self.data["text"].apply(lambda x: " ".join(x))
 
     def trainer(self):
         '''
@@ -77,10 +79,10 @@ class Embedding(metaclass=SingletonMetaclass):
                                      max_df=0.4,
                                      min_df=0.001,
                                      ngram_range=(1, 2))
-        self.tfidf = count_vect.fit(self.data.text)
+        self.tfidf = count_vect.fit(self.data["text"])
         logger.info('train word2vec')
 
-        self.data['text'] = self.data.text.apply(lambda x: x.split(' '))
+        self.data['text'] = self.data["text"].apply(lambda x: x.split(' '))
         self.w2v = models.Word2Vec(min_count=2,
                                    window=5,
                                    size=300,
@@ -91,8 +93,8 @@ class Embedding(metaclass=SingletonMetaclass):
                                    workers=4,
                                    iter=30,
                                    max_vocab_size=50000)
-        self.w2v.build_vocab(self.data.text)
-        self.w2v.train(self.data.text,
+        self.w2v.build_vocab(self.data["text"])
+        self.w2v.train(self.data["text"],
                        total_examples=self.w2v.corpus_count,
                        epochs=15,
                        report_delay=1)
@@ -100,7 +102,7 @@ class Embedding(metaclass=SingletonMetaclass):
         logger.info('train fast')
         # 训练fast的词向量
         self.fast = models.FastText(
-            self.data.text,
+            self.data["text"],
             size=300,  # 向量维度
             window=3,  # 移动窗口
             alpha=0.03,
@@ -116,7 +118,7 @@ class Embedding(metaclass=SingletonMetaclass):
         self.LDAmodel = LdaMulticore(corpus=corpus,
                                      id2word=self.id2word,
                                      num_topics=30,
-                                     workers=4,
+                                     workers=2,
                                      chunksize=4000,
                                      passes=7,
                                      alpha='asymmetric')

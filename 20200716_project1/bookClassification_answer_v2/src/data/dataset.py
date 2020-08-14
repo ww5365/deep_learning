@@ -45,6 +45,7 @@ class MyDataset(Dataset):
         labels = int(data['category_id'])
         attention_mask, token_type_ids = [0], [0]
         if 'bert' in self.model_name:
+            # 如果是bert类模型， 使用tokenizer 的encode_plus方法处理数据
             text_dict = self.tokenizer.encode_plus(
                 text,  # Sentence to encode.
                 add_special_tokens=True,  # Add '[CLS]' and '[SEP]'
@@ -57,6 +58,7 @@ class MyDataset(Dataset):
                 'input_ids'], text_dict['attention_mask'], text_dict[
                     'token_type_ids']
         else:
+            # 如果是cnn rnn， transformer则使用自建的dictionary 来处理
             text = text.split()
             #             print(text)
             text = text + [0] * max(0, self.max_length - len(text)) if len(
@@ -84,7 +86,7 @@ def collate_fn(batch):
     def padding(indice, max_length, pad_idx=0):
         """
         pad 函数
-        注意 token type id 右侧pad是添加1而不是0，1表示属于句子B
+        注意 token type id 右侧pad 添加 0
         """
         pad_indice = [
             item + [pad_idx] * max(0, max_length - len(item))

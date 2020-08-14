@@ -1,15 +1,13 @@
-# -*- coding: utf-8 -*-
 '''
 @Author: xiaoyao jiang
 @LastEditors: xiaoyao jiang
 @Date: 2020-07-01 17:57:53
-@LastEditTime: 2020-07-06 16:38:43
+@LastEditTime: 2020-07-13 10:53:09
 @FilePath: /bookClassification/src/explainAI/hedge_bert.py
 @Desciption:  from https://github.com/UVa-NLP/HEDGE/blob/master/bert/hedge_main_bert_imdb.py
 '''
 from __future__ import absolute_import, division, print_function
 
-import argparse
 import itertools
 import logging
 import os
@@ -19,6 +17,7 @@ import time
 import numpy as np
 import torch
 from torch.utils.data import DataLoader
+from __init__ import *
 from src.data.dataset import MyDataset, collate_fn
 from src.utils import config
 from src.DL.models.bert import Model
@@ -63,6 +62,7 @@ def evaluate(config,
         #     for batch in eval_dataloader:
         model.eval()
         batch = tuple(t.to(config.device) for t in batch)
+        print(batch)
         count += 1
         fileobject.write(str(count))
         fileobject.write('\n')
@@ -84,12 +84,13 @@ def evaluate(config,
         print(count, len(inputs[0][0]) - 2)
         if preds is None:
             preds = logits.detach().cpu().numpy()
-            out_label_ids = batch[3].detach().cpu().numpy()    # label
+            out_label_ids = batch[3].detach().cpu().numpy()  # label
         else:
             preds = np.append(preds, logits.detach().cpu().numpy(), axis=0)
-            out_label_ids = np.append(out_label_ids,
-                                      batch[3].detach().cpu().numpy(),  # label
-                                      axis=0)
+            out_label_ids = np.append(
+                out_label_ids,
+                batch[3].detach().cpu().numpy(),  # label
+                axis=0)
 
         for btxt in ori_text_idx:
             if (tokenizer.ids_to_tokens[btxt] != '[CLS]'
@@ -103,10 +104,12 @@ def evaluate(config,
         else:
             fileobject.write('1')
             fileobject.write(' ||| ')
-
+        print('HEDGE')
         shap = hedge.HEDGE(model, inputs, config, thre=100)
+        print('shap', shap)
         shap.compute_shapley_hier_tree(model, inputs, 2)
         word_list, _ = shap.get_importance_phrase()
+        print('word_list', word_list)
 
         for feaidx in word_list:
             if len(feaidx) == 1:
@@ -144,27 +147,27 @@ def evaluate(config,
     return eval_acc
 
 
-# Set seed
-set_seed(config)
-
-config.bert_path = config.root_path + '/model/bert/'
-config.hidden_size = 768
-model = Model(config).to(config.device)
-
-checkpoint = torch.load(config.root_path + '/model/saved_dict/bert.ckpt')
-model.load_state_dict(checkpoint, strict=False)
-model.eval()
-tokenizer = BertTokenizer.from_pretrained(config.root_path + '/model/bert',
-                                          do_lower_case=config.do_lower_case)
-model.to(config.device)
-
 if __name__ == '__main__':
+    # Set seed
+    set_seed(config)
+
+    config.bert_path = config.root_path + '/model/bert/'
+    config.hidden_size = 768
+    model = Model(config).to(config.device)
+
+    checkpoint = torch.load(config.root_path + '/model/saved_dict/bert.ckpt')
+    model.load_state_dict(checkpoint, strict=False)
+    tokenizer = BertTokenizer.from_pretrained(
+        config.root_path + '/model/bert', do_lower_case=config.do_lower_case)
+    model.to(config.device)
+    print('finish model load')
     if config.visualize > -1:
         start_pos = config.visualize
         end_pos = start_pos + 1
     else:
         start_pos = config.start_pos
         end_pos = config.end_pos
+    print('load data')
     test_dataset = MyDataset(config.test_file,
                              None,
                              config.max_length,
@@ -173,6 +176,7 @@ if __name__ == '__main__':
     file_name = 'hedge_bert_' + str(config.start_pos) + '-' + str(
         config.end_pos) + '.txt'
     with open(file_name, 'w') as f:
+        print('evaluate')
         test_acc = evaluate(config, model, tokenizer, test_dataset, f,
                             start_pos, end_pos)
     print('\ntest_acc {:.6f}'.format(test_acc))

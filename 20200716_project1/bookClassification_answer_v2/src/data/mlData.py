@@ -28,6 +28,7 @@ class MLData(object):
         em, new embedding class
         @return:None
         '''
+        # 加载embedding， 如果不训练， 则不处理数据
         self.debug_mode = debug_mode
         self.em = Embedding()
         self.em.load()
@@ -48,14 +49,18 @@ class MLData(object):
         if self.debug_mode:
             self.train = self.train.sample(n=1000).reset_index(drop=True)
             self.dev = self.dev.sample(n=100).reset_index(drop=True)
+        # 拼接数据
         self.train["text"] = self.train['title'] + self.train['desc']
         self.dev["text"] = self.dev['title'] + self.dev['desc']
+        # 分词
         self.train["queryCut"] = self.train["text"].apply(query_cut)
         self.dev["queryCut"] = self.dev["text"].apply(query_cut)
+        # 过滤停止词
         self.train["queryCutRMStopWord"] = self.train["queryCut"].apply(
             lambda x: [word for word in x if word not in self.em.stopWords])
         self.dev["queryCutRMStopWord"] = self.dev["queryCut"].apply(
             lambda x: [word for word in x if word not in self.em.stopWords])
+        # 生成label 与id的对应关系， 并保存到文件中， 如果存在这个文件则直接加载
         if os.path.exists(config.root_path + '/data/label2id.json'):
             labelNameToIndex = json.load(
                 open(config.root_path + '/data/label2id.json', encoding='utf-8'))
@@ -82,6 +87,7 @@ class MLData(object):
         y_train, label of train set
         y_test, label of test set
         '''
+        # 处理数据， 获取到数据的embedding， 如tfidf ,word2vec, fasttext
         X_train = self.get_feature(self.train, method)
         X_test = self.get_feature(self.dev, method)
         y_train = self.train["labelIndex"]

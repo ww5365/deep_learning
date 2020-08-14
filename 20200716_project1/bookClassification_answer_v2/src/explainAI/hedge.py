@@ -1,9 +1,8 @@
-# -*- coding: utf-8 -*-
 '''
 @Author: xiaoyao jiang
 @LastEditors: xiaoyao jiang
 @Date: 2020-07-01 17:58:38
-@LastEditTime: 2020-07-06 16:46:03
+@LastEditTime: 2020-07-14 07:37:47
 @FilePath: /bookClassification/src/explainAI/hedge.py
 @Desciption:  from https://github.com/UVa-NLP/HEDGE/blob/master/bert/hedge_bert.py
 '''
@@ -30,7 +29,8 @@ class HEDGE:
         mask_type = torch.zeros(input.shape, dtype=torch.long)
         temp = [
             torch.unsqueeze(mask_input, 0).to(args.device),  # input_ids
-            torch.unsqueeze(mask_attention, 0).to(args.device),  # attention_mask
+            torch.unsqueeze(mask_attention,
+                            0).to(args.device),  # attention_mask
             torch.unsqueeze(mask_type, 0).to(args.device),  # token_type_ids
         ]
         score = model(temp).detach().cpu().numpy()
@@ -53,18 +53,23 @@ class HEDGE:
         for fea_idx in fea_set:
             if type(fea_idx) == int:
                 mask_input[fea_idx + 1] = input[
-                    fea_idx + 1]  # +1 accounts for the CLS token at the begining
+                    fea_idx +
+                    1]  # +1 accounts for the CLS token at the begining
                 mask_attention[
-                    fea_idx + 1] = 1  # +1 accounts for the CLS token at the begining
+                    fea_idx +
+                    1] = 1  # +1 accounts for the CLS token at the begining
             else:
                 for idx in fea_idx:
                     mask_input[idx + 1] = input[
-                        idx + 1]  # +1 accounts for the CLS token at the begining
+                        idx +
+                        1]  # +1 accounts for the CLS token at the begining
                     mask_attention[
-                        idx + 1] = 1  # +1 accounts for the CLS token at the begining
+                        idx +
+                        1] = 1  # +1 accounts for the CLS token at the begining
         temp = [
             torch.unsqueeze(mask_input, 0).to(args.device),  # input_ids
-            torch.unsqueeze(mask_attention, 0).to(args.device),  # attention_mask
+            torch.unsqueeze(mask_attention,
+                            0).to(args.device),  # attention_mask
             torch.unsqueeze(mask_type, 0).to(args.device),  # token_type_ids
         ]
         # send the mask_input into model
@@ -95,7 +100,7 @@ class HEDGE:
         if right + win_size > fea_num - 1:
             right_set = feature_set[right + 1:]
         else:
-            right_set = feature_set[right + 1: right + win_size + 1]
+            right_set = feature_set[right + 1:right + win_size + 1]
         adj_set = left_set + right_set
         num_adj = len(adj_set)
         dict_subset = {
@@ -259,7 +264,7 @@ class HEDGE:
 
     def get_last_level_phrases(self, inputs):
         text = inputs['input_ids'][0]
-        text = text.detach().numpy()
+        text = text.cpu().detach().numpy()
         hier_tree = self.complete_hier_tree()
         last_level = hier_tree[self.max_level]
         ordered_list = sorted(last_level,
@@ -270,7 +275,7 @@ class HEDGE:
 
     def visualize_tree(self, batch, tokenizer, fontsize=10):
         text = batch[0][0]  # input_ids
-        text = text.detach().numpy()
+        text = text.cpu().detach().numpy()
         levels = self.max_level
         vals = np.array([
             fea[1] for level in range(levels) for fea in self.hier_tree[level]

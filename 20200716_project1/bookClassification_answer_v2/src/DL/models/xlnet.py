@@ -1,8 +1,8 @@
 '''
 @Author: your name
 @Date: 2020-06-18 21:15:35
-@LastEditTime: 2020-06-30 14:20:16
-@LastEditors: Please set LastEditors
+@LastEditTime: 2020-07-17 16:35:25
+@LastEditors: xiaoyao jiang
 @Description: In User Settings Edit
 @FilePath: /bookClassification/src/DL/models/xlnet.py
 '''
@@ -14,11 +14,12 @@ from __init__ import *
 
 
 class Model(nn.Module):
-
     def __init__(self, config):
         super(Model, self).__init__()
-        model_config = XLNetConfig.from_pretrained(config.bert_path, num_labels=config.num_classes)
-        self.xlnet = XLNetForSequenceClassification.from_pretrained(config.bert_path, config=model_config)
+        model_config = XLNetConfig.from_pretrained(
+            config.bert_path, num_labels=config.num_classes)
+        self.xlnet = XLNetForSequenceClassification.from_pretrained(
+            config.bert_path, config=model_config)
         for param in self.bert.parameters():
             param.requires_grad = True
         self.fc = nn.Linear(config.hidden_size, config.num_classes)
