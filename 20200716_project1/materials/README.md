@@ -3,7 +3,7 @@
 ### First, run `src/word2vec/embedding.py` to generate all word embedding (include word2vec, fasttext, tfidf, lda, autoencoder).
 
 ### Second, run `src/ML/main.py` to run all kinds of models.
-* 运行命令：`python3 ./src/ML/main.py --feature_engineering True --search_method bayesian --unbalance True  --imbalance_method under_sampling --model_name lgb_under_sampling`
+* 运行命令：`python3 ./src/ML/main.py --search_method bayesian --unbalance True  --imbalance_method under_sampling --model_name lgb_under_sampling`
 * 下载resnet模型: 三个都手动下载，放到/home/jovyan/.cache/torch/checkpoints目录下
 * 下载bert的预训练模型： [Bert](https://github.com/google-research/bert)里的Pre-trained models找到下载链接，中英文都有; [项目可用pytorch版本bert](https://s3.amazonaws.com/models.huggingface.co/bert/bert-base-chinese.tar.gz)，下载三个文件:
 bert_config.json(重命名config.json)  pytorch_model.bin  vocab.txt(另外下载)
