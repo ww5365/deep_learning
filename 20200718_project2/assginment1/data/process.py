@@ -3,10 +3,10 @@
 '''
 @Author: lpx
 @Date: 2020-07-13 20:16:37
-@LastEditTime: 2020-07-18 17:28:26
+@LastEditTime: 2020-07-18 17:28:41
 @LastEditors: Please set LastEditors
 @Description: Process a raw dataset into a sample file.
-@FilePath: /JD_project_2/baseline/data/process.py
+@FilePath: /JD_project_2/data/process.py
 '''
 
 import sys

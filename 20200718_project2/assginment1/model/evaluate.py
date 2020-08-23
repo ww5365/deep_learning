@@ -3,11 +3,12 @@
 '''
 @Author: jby
 @Date: 2020-07-13 11:00:51
-@LastEditTime: 2020-07-18 15:41:43
+@LastEditTime: 2020-07-26 17:53:01
 @LastEditors: Please set LastEditors
 @Description: Evaluate the loss in the dev set.
-@FilePath: /JD_project_2/baseline/model/evaluate.py
+@FilePath: /JD_project_2/model/evaluate.py
 '''
+
 import os
 import sys
 import pathlib
@@ -38,7 +39,7 @@ def evaluate(model, val_data, epoch):
 
     val_loss = []
     with torch.no_grad():
-        DEVICE = torch.device("cuda" if config.is_cuda else "cpu")
+        DEVICE = config.DEVICE
         val_dataloader = DataLoader(dataset=val_data,
                                     batch_size=config.batch_size,
                                     shuffle=True,
@@ -51,6 +52,11 @@ def evaluate(model, val_data, epoch):
                 y = y.to(DEVICE)
                 x_len = x_len.to(DEVICE)
                 len_oovs = len_oovs.to(DEVICE)
-            loss = model(x, x_len, y, len_oovs, batch=batch)
+            loss = model(x,
+                         x_len,
+                         y,
+                         len_oovs,
+                         batch=batch,
+                         num_batches=len(val_dataloader))
             val_loss.append(loss.item())
     return np.mean(val_loss)

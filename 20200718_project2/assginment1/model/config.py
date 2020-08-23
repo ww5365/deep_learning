@@ -3,18 +3,21 @@
 '''
 @Author: lpx, jby
 @Date: 2020-07-13 11:00:51
-@LastEditTime: 2020-07-19 14:10:04
+@LastEditTime: 2020-07-26 17:36:24
 @LastEditors: Please set LastEditors
 @Description: Define configuration parameters.
-@FilePath: /JD_project_2/baseline/model/config.py
+@FilePath: /JD_project_2/model/config.py
 '''
 
 from typing import Optional
 
+import torch
 
+# General
 hidden_size: int = 512
 dec_hidden_size: Optional[int] = 512
 embed_size: int = 300
+pointer = True
 
 # Data
 max_vocab_size = 20000
@@ -32,17 +35,9 @@ max_dec_steps: int = 100
 enc_rnn_dropout: float = 0.5
 enc_attn: bool = True
 dec_attn: bool = True
-pointer: bool = True
 dec_in_dropout = 0
 dec_rnn_dropout = 0
 dec_out_dropout = 0
-is_cuda = True
-encoder_save_name = '../saved_model/encoder.pt'
-decoder_save_name = '../saved_model/decoder.pt'
-attention_save_name = '../saved_model/attention.pt'
-reduce_state_save_name = '../saved_model/reduce_state.pt'
-losses_path = '../saved_model/val_losses.pkl'
-max_grad_norm = 2.0
 
 
 # Training
@@ -53,15 +48,35 @@ lr_decay = 0.0
 initial_accumulator_value = 0.1
 epochs = 8
 batch_size = 8
-coverage = False
-fine_tune = False
-log_path = '../runs/baseline'
+coverage = True
+fine_tune = True
+max_grad_norm = 2.0
+is_cuda = True
+DEVICE = torch.device("cuda" if is_cuda else "cpu")
+LAMBDA = 1
 
-# Testing
-test_data_path: str = '../files/test.txt'
+if pointer:
+    if coverage:
+        if fine_tune:
+            model_name = 'ft_pgn'
+        else:
+            model_name = 'cov_pgn'
+    else:
+        model_name = 'pgn'
+
+else:
+    model_name = 'baseline'
+
+encoder_save_name = '../saved_model/' + model_name + '/encoder.pt'
+decoder_save_name = '../saved_model/' + model_name + '/decoder.pt'
+attention_save_name = '../saved_model/' + model_name + '/attention.pt'
+reduce_state_save_name = '../saved_model/' + model_name + '/reduce_state.pt'
+losses_path = '../saved_model/' + model_name + '/val_losses.pkl'
+log_path = '../runs/' + model_name
+
+
 # Beam search
 beam_size: int = 3
 alpha = 0.2
 beta = 0.2
-gamma = 0.1
-
+gamma = 0.6

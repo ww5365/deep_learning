@@ -3,16 +3,26 @@
 '''
 @Author: lpx, jby
 @Date: 2020-07-13 11:07:48
-@LastEditTime: 2020-07-18 14:25:15
+@LastEditTime: 2020-07-26 20:25:17
 @LastEditors: Please set LastEditors
 @Description: Helper functions or classes used for the model.
-@FilePath: /JD_project_2/baseline/model/utils.py
+@FilePath: /JD_project_2/model/utils.py
 '''
 
-import time
-import heapq
 
 import numpy as np
+import time
+import heapq
+import random
+import sys
+import pathlib
+
+import torch
+
+abs_path = pathlib.Path(__file__).parent.absolute()
+sys.path.append(sys.path.append(abs_path))
+
+import config
 
 
 def timer(module):
@@ -55,14 +65,6 @@ def count_words(counter, text):
 
 
 def sort_batch_by_len(data_batch):
-    """
-
-    Args:
-        data_batch (Tensor): Batch before sorted.
-
-    Returns:
-        Tensor: Batch after sorted.
-    """
     res = {'x': [],
            'y': [],
            'x_len': [],
@@ -102,13 +104,22 @@ def outputids2words(id_list, source_oovs, vocab):
         Returns:
             words: list of words (strings)
     """
-
-    ###########################################
-    #          TODO: module 1 task 4          #
-    ###########################################
-
     words = []
-
+    for i in id_list:
+        try:
+            w = vocab.index2word[i]  # might be [UNK]
+        except IndexError:  # w is OOV
+            assert_msg = "Error: cannot find the ID the in the vocabulary."
+            assert source_oovs is not None, assert_msg
+            source_oov_idx = i - vocab.size()
+            try:
+                w = source_oovs[source_oov_idx]
+            except ValueError:  # i doesn't correspond to an source oov
+                raise ValueError(
+                    'Error: model produced word ID %i corresponding to source OOV %i \
+                     but this example only has %i source OOVs'
+                    % (i, source_oov_idx, len(source_oovs)))
+        words.append(w)
     return ' '.join(words)
 
 
@@ -127,57 +138,101 @@ def source2ids(source_words, vocab):
         A list of the OOV words in the source (strings), in the order
         corresponding to their temporary source OOV numbers.
     """
-
-    ###########################################
-    #          TODO: module 1 task 3          #
-    ###########################################
-
     ids = []
     oovs = []
-    unk_id = vocab["<UNK>"]
- 
+    unk_id = vocab.UNK
+    for w in source_words:
+        i = vocab[w]
+        if i == unk_id:  # If w is OOV
+            if w not in oovs:  # Add to list of OOVs
+                oovs.append(w)
+            # This is 0 for the first source OOV, 1 for the second source OOV
+            oov_num = oovs.index(w)
+            # This is e.g. 20000 for the first source OOV, 50001 for the second
+            ids.append(vocab.size() + oov_num)
+        else:
+            ids.append(i)
     return ids, oovs
 
 
-class Beam(object):
-    """The contianer for a temperay sequence used in beam search.
+def abstract2ids(abstract_words, vocab, source_oovs):
+    """Map tokens in the abstract (reference) to ids.
+       OOV tokens in the source will be remained.
+
+    Args:
+        abstract_words (list): Tokens in the reference.
+        vocab (vocab.Vocab): The vocabulary.
+        source_oovs (list): OOV tokens in the source.
+
+    Returns:
+        list: The reference with tokens mapped into ids.
     """
+    ids = []
+    unk_id = vocab.UNK
+    for w in abstract_words:
+        i = vocab[w]
+        if i == unk_id:  # If w is an OOV word
+            if w in source_oovs:  # If w is an in-source OOV
+                # Map to its temporary source OOV number
+                vocab_idx = vocab.size() + source_oovs.index(w)
+                ids.append(vocab_idx)
+            else:  # If w is an out-of-source OOV
+                ids.append(unk_id)  # Map to the UNK token id
+        else:
+            ids.append(i)
+    return ids
+
+
+class Beam(object):
     def __init__(self,
                  tokens,
                  log_probs,
                  decoder_states,
-                 attention_weights,
-                 max_oovs,
-                 encoder_input):
+                 coverage_vector):
         self.tokens = tokens
         self.log_probs = log_probs
         self.decoder_states = decoder_states
-        self.attention_weights = attention_weights
-        self.max_oovs = max_oovs
-        self.encoder_input = encoder_input
+        self.coverage_vector = coverage_vector
 
     def extend(self,
                token,
                log_prob,
                decoder_states,
-               attention_weights,
-               max_oovs,
-               encoder_input):
-        """Extend the curren beam using now token and return a new beam.
-        """
+               coverage_vector):
         return Beam(tokens=self.tokens + [token],
                     log_probs=self.log_probs + [log_prob],
                     decoder_states=decoder_states,
-                    attention_weights=attention_weights,
-                    max_oovs=max_oovs,
-                    encoder_input=encoder_input)
+                    coverage_vector=coverage_vector)
 
     def seq_score(self):
         """
-        This function calculates the score of the current sequence.
+        This function calculate the score of the current sequence.
+        The scores are calculated according to the definitions in
+        https://opennmt.net/OpenNMT/translation/beam_search/.
+        1. Lenth normalization is used to normalize the cumulative score
+        of a whole sequence.
+        2. Coverage normalization is used to favor the sequences that fully
+        cover the information in the source. (In this case, it serves different
+        purpose from the coverage mechanism defined in PGN.)
+        3. Alpha and beta are hyperparameters that used to control the
+        strengths of ln and cn.
         """
-        score = sum(self.log_probs) / len(self.tokens)
-        return score.item()
+        len_Y = len(self.tokens)
+        # Lenth normalization
+        ln = (5+len_Y)**config.alpha / (5+1)**config.alpha
+        cn = config.beta * torch.sum(  # Coverage normalization
+            torch.log(
+                config.eps +
+                torch.where(
+                    self.coverage_vector < 1.0,
+                    self.coverage_vector,
+                    torch.ones((1, self.coverage_vector.shape[1])).to(torch.device(config.DEVICE))
+                )
+            )
+        )
+
+        score = sum(self.log_probs) / ln + cn
+        return score
 
     def __lt__(self, other):
         return self.seq_score() < other.seq_score()
@@ -202,3 +257,18 @@ def add2heap(heap, item, k):
         heapq.heappush(heap, item)
     else:
         heapq.heappushpop(heap, item)
+
+
+def replace_oovs(in_tensor, vocab):
+    """Replace oov tokens in a tensor with the <UNK> token.
+
+    Args:
+        in_tensor (Tensor): The tensor before replacement.
+        vocab (vocab.Vocab): The vocabulary.
+
+    Returns:
+        Tensor: The tensor after replacement.
+    """    
+    oov_token = torch.full(in_tensor.shape, vocab.UNK).long().to(config.DEVICE)
+    out_tensor = torch.where(in_tensor > len(vocab) - 1, oov_token, in_tensor)
+    return out_tensor

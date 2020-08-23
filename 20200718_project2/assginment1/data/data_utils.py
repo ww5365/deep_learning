@@ -3,10 +3,10 @@
 '''
 @Author: lpx
 @Date: 2020-07-13 11:00:51
-@LastEditTime: 2020-07-18 15:34:47
+@LastEditTime: 2020-07-26 20:07:41
 @LastEditors: Please set LastEditors
 @Description: Helper functions or classes used in data processing.
-@FilePath: /JD_project_2/baseline/data/data_utils.py
+@FilePath: /JD_project_2/data/data_utils.py
 '''
 
 import os

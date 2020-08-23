@@ -3,10 +3,10 @@
 '''
 @Author: lpx
 @Date: 2020-07-13 17:56:13
-@LastEditTime: 2020-07-18 17:25:31
+@LastEditTime: 2020-07-26 20:07:13
 @LastEditors: Please set LastEditors
 @Description: Evaluate the model with ROUGE score.
-@FilePath: /JD_project_2/baseline/model/rouge_eval.py
+@FilePath: /JD_project_2/model/rouge_eval.py
 '''
 
 import os
@@ -75,7 +75,7 @@ result = rouge_eval.get_average()
 print('rouge1: ', result['rouge-1'])
 print('rouge2: ', result['rouge-2'])
 print('rougeL: ', result['rouge-l'])
-with open('../files/rouge_result.txt', 'w') as file:
+with open('../files/rouge_result.txt', 'a') as file:
     for r, metrics in result.items():
         file.write(r+'\n')
         for metric, value in metrics.items():
