@@ -2,6 +2,7 @@
 
 import os
 import sys
+import random
 
 
 
@@ -87,17 +88,27 @@ def save_file():
       print(cur_dir)
       
       #创建tmp目录
-      full_dir = cur_dir + "/tmp"
+      full_dir = cur_dir + "/tmp/"
       if not os.path.exists(full_dir):
             os.makedirs(full_dir)
             print("full path: ", full_dir)
 
-      
+      file_path = full_dir + "random.txt" 
+      with open(file_path, 'w', encoding = 'utf-8') as f:
+            for i in range(10):
+                  f.write("\t".join([str(i), random.choice(['a','b','c'])]))
+                  f.write('\n')
 
 if __name__ == '__main__':
       
       ##dir function use case
       print("\n".join(dir(Foo))) ## 3个成员函数
+      
+
       get_file_path()
       read_file()
       save_file()
+      
+      #print 
+      str1 = "wang"
+      print("format print: %s ... %s" % (str1, str1), end = '*')

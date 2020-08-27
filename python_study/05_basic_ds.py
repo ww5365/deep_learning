@@ -51,8 +51,38 @@ if __name__ == '__main__':
     print("tuple_list:", tuple_list) ##一个对象
 
     for key, value in zip(li1,li2): ##一个可迭代对象，对每个元素(是一个元祖)
-        print("key:value=[%d:%s]"%(key,value))
+        print("key:value=[%d:%s]"%(key,value)) ##key:value=[1:test1]
 
     for idx, value in enumerate(zip(li1,li2)):
-        print("key:value=[%d:%s]"%(idx,value))
+        print("key:value=[%d:%s]"%(idx,value)) ## key:value=[0:(1, 'test1')]
+
+    '''
+    3. set
+    集合（set）是一个无序的不重复元素序列。
+    可以使用大括号 { } 或者 set() 函数创建集合
+    注意：创建一个空集合必须用 set() 而不是 { }，因为 { } 是用来创建一个空字典
+
+    重复的key，只保留一个
+
+    '''  
+    set1 = set()
+    set2 = {'wang', 'wei'}  #集合初始化，和定义一个空dict不同 
+    set1.add('test') # 只能添加1个元素
+    
+    #增加
+    set1.update(set2) #也可以添加多个元素，且参数可以是列表，元组，字典等
+    set1.update({'wang':5, 'num2':6}) #仅添加key到set中，update和之前重复的,仅保留1个，比如wang
+    print(set1)
+    #删除
+    set1.remove("wei") #key不存在的话，会抛出异常
+    set1.discard("we") #key不存在的话，不会抛出异常
+    print(set1)
+
+    #查询
+    elem = "wang"
+    if elem in set1:
+      print(elem)
+
+
+
     

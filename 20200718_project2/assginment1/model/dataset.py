@@ -27,7 +27,11 @@ import config
 
 
 class PairDataset(object):
-    """The class represents source-reference pairs.
+    """
+    The class represents source-reference pairs.
+    
+    tokenize: Callable = simple_tokenizer  
+    回调函数可以使用类似Callable[[Arg1Type, Arg2Type],ReturnType]的类型注释
 
     """
     def __init__(self,
@@ -63,7 +67,7 @@ class PairDataset(object):
                     else:
                         continue
                 self.pairs.append((src, tgt))
-        print("%d pairs." % len(self.pairs))
+        print("build %d pairs." % len(self.pairs))
 
     def build_vocab(self, embed_file: str = None) -> Vocab:
         """Build the vocabulary for the data set.

@@ -8,10 +8,14 @@
 @Description: Define configuration parameters.
 @FilePath: /JD_project_2/model/config.py
 '''
-
 from typing import Optional
-
 import torch
+
+'''
+类型注释: 
+var: type = value  其实本质上就是  var = value  # type就是var期望的类型
+类型注释只是一种提示，并非强制的，Python解释器不会去校验value的类型是否真的是type
+'''
 
 # General
 hidden_size: int = 512
