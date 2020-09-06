@@ -43,7 +43,7 @@ if __name__ == '__main__':
     for token in tokens:
         print ("line token: %s" %token)
 
-
+    li = [1,2,3,34]
     ##enumerate 枚举迭代器； 逆序访问数组或字符串;
     for index,key in enumerate(li[::-1]):
         print("index:%d value:%d" %(index,key))
