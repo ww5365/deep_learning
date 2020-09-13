@@ -4,8 +4,8 @@
 Author: Bingyu Jiang, Peixin Lin
 LastEditors: Peixin Lin
 Date: 2020-08-21 16:20:49
-LastEditTime: 2020-08-27 19:38:38
-FilePath: /Assignment3-1/config.py
+LastEditTime: 2020-08-27 19:37:41
+FilePath: /Assignment3-1_solution/config.py
 Desciption: 配置文件。
 Copyright: 北京贪心科技有限公司版权所有。仅供教学目的使用。
 '''
@@ -30,6 +30,7 @@ test_path = os.path.join(root_path, 'data/test.csv')
 business_train = os.path.join(root_path, 'data/intention/business.train')
 business_test = os.path.join(root_path, 'data/intention/business.test')
 keyword_path = os.path.join(root_path, 'data/intention/key_word.txt')
+
 
 ''' Intention '''
 # fasttext
