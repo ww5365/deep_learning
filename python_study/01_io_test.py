@@ -4,6 +4,10 @@ import os
 import sys
 import random
 import pathlib
+import time
+from datetime import datetime
+import types
+import codecs
 '''
 dir():  dir([object])  --object: 对象、变量、类型  返回：属性列表list
 
@@ -51,15 +55,39 @@ def get_file_path():
     root_path = pathlib.Path(__file__).parent.parent.absolute()
     sys.path.append(sys.path.append(root_path))
     print("pathlib: syspath:", root_path, sys.path)
+    '''
+        os.walk : 通过在目录树中游走输出在目录中的文件名，向上或者向下;
+        
+        os.walk(top[, topdown=True[, onerror=None[, followlinks=False]]])
+        
+        输入和输出说明：
+        
+        top -- 是你所要遍历的目录的地址
+        
+        返回的是一个三元组(root,dirs,files)。
+            root 所指的是当前正在遍历的这个文件夹的本身的地址
+            dirs 是一个 list ，内容是该文件夹中所有的目录的名字(不包括子目录)
+            files 同样是 list , 内容是该文件夹中所有的文件(不包括子目录)
+        topdown --可选，为 True，则优先遍历 top 目录，否则优先遍历 top 的子目录(默认为开启)。如果 topdown 参数为 True，walk 会遍历top文件夹，与top 文件夹中每一个子目录。
+        onerror -- 可选，需要一个 callable 对象，当 walk 需要异常时，会调用。
+        followlinks -- 可选，如果为 True，则会遍历目录下的快捷方式(linux 下是软连接 symbolic link )实际所指的目录(默认关闭)，如果为 False，则优先遍历 top 的子目录。
+    '''
 
+    for root, dirs, files in os.walk(".", topdown=False):
 
-'''
-1、几种不同的文件读取的方式
-'''
+        for name in dirs:
+            print("current dir subdirs: ", os.path.join(root, name))
+
+        for name in files:
+            print("current dir files: ", os.path.join(root, name))
+
+    print()
 
 
 def read_file():
-
+    '''
+    1、几种不同的文件读取的方式
+    '''
     # 1 正常思路: 无异常处理
     root_path = pathlib.Path(__file__).parent
     file_path = os.path.join(root_path, 'test.txt')
@@ -135,6 +163,29 @@ def save_file():
             f.write('\n')
 
 
+def codecs_use():
+
+    # python3 字符串存储，编码相关
+    u = '王伟'
+    str1 = u.encode('gb18030')  # 以gb18030编码对u进行编码，获得bytes类型对象str
+    print("encode typpe: ", str1, type(str1))
+    print(str1.decode('gb18030'))
+    #print(str1.decode('utf-8'))
+
+    file_path = os.path.dirname(__file__)
+    file_path = file_path + '/tmp/random.txt'
+    print(file_path)
+
+    f = codecs.open(file_path, 'r+', encoding='utf-8')
+    content = f.read()
+    print("content: ", content)
+
+    for c in content:
+        print("---", c)
+
+    f.close()
+
+
 if __name__ == '__main__':
 
     # dir function use case
@@ -143,7 +194,41 @@ if __name__ == '__main__':
     get_file_path()
     read_file()
     save_file()
+    codecs_use()
 
-    # print
+    # 格式化打印
     str1 = "wang"
     print("format print: %s ... %s" % (str1, str1), end='*')
+
+    print("\n")
+    print("escape charater: \\")
+
+    # time 使用
+    start = datetime.now()
+    time.sleep(1)
+    print((datetime.now() - start).seconds)
+
+    # 格式输出，还能拼接
+    format_str = "test format %d : %s"
+    num = 10
+    str1 = "format str"
+    format_str = format_str % (num, str1)
+    print(format_str)
+    print("test format2: %d : %s" % (num, str1))
+
+    # str.format  一种格式化字符串的函数,它通过 {} 和 : 来代替以前的 %
+    wiki_url = "http://www.baidu.com/api/{}/query={}"
+    url = wiki_url.format("v1", "kaocheng")  # 直接填{}中内容
+    print(url)
+
+    wiki_url2 = "http://www.baidu.com/api/{version}/query={key}"
+    url2 = wiki_url2.format(version="v2", key="kaocheng")  # 使用{参数}
+    print(url2)
+
+    # 保留小数点后两位
+    print("{:.2f}".format(3.1415926))
+
+    # 四舍五入，保留小数后n位 round(x, n)
+    x = 1.545
+    print(round(x, 2))
+    print(round(x))  #默认保留整数部分
