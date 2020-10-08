@@ -20,3 +20,5 @@ if __name__ == '__main__':
     print("type:isinstance", type(li1) == list, isinstance(li1, list))
 
     # format
+
+    

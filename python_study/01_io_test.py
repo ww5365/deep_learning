@@ -37,6 +37,16 @@ def get_file_path():
       os.path.abspath: 返回当前路径的绝对路径
       os.path.split: 按照"\"来切割最后一层目录和之前的路径,tuple：比如： /tmp/test/test1  ->  (/tmp/test, test1)
       os.path.join: 将两个目录字符串拼接起来，用/进行连接
+
+      pathlib库：
+      pathlib.Path()
+
+
+      sys:
+      sys.path.append() 加入系统路径
+
+
+
     '''
     print(os.path.dirname(__file__))
     cur_path = os.path.abspath(os.path.dirname(__file__))
@@ -168,7 +178,7 @@ def codecs_use():
     # python3 字符串存储，编码相关
     u = '王伟'
     str1 = u.encode('gb18030')  # 以gb18030编码对u进行编码，获得bytes类型对象str
-    print("encode typpe: ", str1, type(str1))
+    print("encode type: ", str1, type(str1))
     print(str1.decode('gb18030'))
     #print(str1.decode('utf-8'))
 
@@ -217,11 +227,11 @@ if __name__ == '__main__':
     print("test format2: %d : %s" % (num, str1))
 
     # str.format  一种格式化字符串的函数,它通过 {} 和 : 来代替以前的 %
-    wiki_url = "http://www.baidu.com/api/{}/query={}"
+    wiki_url = r"http://www.baidu.com/api/{}/query={}"
     url = wiki_url.format("v1", "kaocheng")  # 直接填{}中内容
     print(url)
 
-    wiki_url2 = "http://www.baidu.com/api/{version}/query={key}"
+    wiki_url2 = r"http://www.baidu.com/api/{version}/query={key}"
     url2 = wiki_url2.format(version="v2", key="kaocheng")  # 使用{参数}
     print(url2)
 

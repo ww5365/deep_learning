@@ -32,6 +32,47 @@ if __name__ == '__main__':
     li = [0,1,2,3,4]
     print(li[::2])
 
+    # list 使用 []定义
+    li = [1,2,3,4]
+    
+    # 负数索引, -1 表示获取最后一个元素
+    print(li[-1], li[-3])
+
+    # 增，删，修改
+
+    li.append(8)
+    li.append(9)  # 尾部插入1个元素
+    li.insert(0, 19) # 下标0处，插入元素19
+    print(li)
+
+    del li[1] # 删除下标索引1的值
+    x1 = li.pop() # 尾部元素弹出，删除
+    x2 = li.pop(0) # 头部元素，即下标0处，弹出删除
+    li.remove(3)  #删除元素值为3的元素
+
+    print(li, x1, x2)  ## 体会一下三种删除方式的异同？ del pop remove
+
+    #排序
+
+    li2 = sorted(li, reverse = True) ## li 中元素位置不变
+    print("sorted:", li2, li)
+    li.sort(reverse = True)  ## li中元素也永久发生变化
+
+    # 翻转
+
+    print("before reverse: ", li)
+    li.reverse()
+    print("after reverse: ", li)
+
+    # 数组越界
+    try:
+        print(li[-1])  ##较好的获取最后一个元素的方式，只有为空时才抛出异常
+        print(li[4])
+    except :
+        print("error")
+        pass
+
+
     '''
     2、元组 (x,y) 
       tuple与list类似，不同之处在于tuple中的元素不能进行修改。
