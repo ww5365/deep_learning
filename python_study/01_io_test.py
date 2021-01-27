@@ -84,6 +84,25 @@ def get_file_path():
     print()
 
 
+def get_file_name():
+    '''
+    file = ".\dir\test.txt"
+    os.path.split : 返回(.\dir, test.txt)
+    os.path.splitext : 返回(.\dir\test, txt)
+    
+    '''
+    CUR_PATH = os.path.abspath(os.path.dirname(__file__))
+
+    ## 获取文件的名称，去掉后缀
+    (path_filename, ext) = os.path.splitext(__file__)
+    (path, filename) = os.path.split(path_filename)
+
+    new_file_name = CUR_PATH + '\\' + filename + "_with_label" + ext
+
+    print("filename: ", filename, path, path_filename)
+    print("new filename: ", new_file_name)
+
+
 def read_file():
     '''
     1、几种不同的文件读取的方式
@@ -130,7 +149,7 @@ def read_file():
             print("line33:%d -> %s" % (line_no, line))
             line = f3.readline()
 
-        #直接读取
+        # 直接读取
         f3.seek(0)
         line_no = 0
         for line in f3:
@@ -170,14 +189,28 @@ def codecs_use():
     str1 = u.encode('gb18030')  # 以gb18030编码对u进行编码，获得bytes类型对象str
     print("encode typpe: ", str1, type(str1))
     print(str1.decode('gb18030'))
-    #print(str1.decode('utf-8'))
+    # print(str1.decode('utf-8'))
 
-    file_path = os.path.dirname(__file__)
-    file_path = file_path + '/tmp/random.txt'
+    print("--" * 30)
+    cur_path = os.path.dirname(__file__)
+    print(cur_path)
+    cur_path = os.path.abspath(cur_path)
+    print(cur_path)
+    '''
+    os.path.join()函数：连接两个或更多的路径名组件
+        1.如果各组件名首字母不包含’/’，则函数会自动加上
+        2.如果有一个组件是一个绝对路径，之前的所有组件均会被舍，
+            比如：os.path.join(d:/test1/test2, /test3/test4) -> d:/test3/test4 第二个参数是绝对路径，将test1 ，test2舍弃
+        3.如果最后一个组件为空，则生成的路径以一个’/’分隔符结尾
+    '''
+    file_path = os.path.join(cur_path,
+                             r'tmp\random.txt')  ## 得到错误路径：d:\tmp\random.txt
+    print(file_path)
+    file_path = cur_path + r'\tmp\random.txt'
     print(file_path)
 
-    f = codecs.open(file_path, 'r+', encoding='utf-8')
-    content = f.read()
+    f = codecs.open(file_path, 'r+', encoding='utf-8')  # codecs 库主要可以读入文件的编码格式
+    content = f.read()  # f.write('content') 你想写入的内容
     print("content: ", content)
 
     for c in content:
@@ -195,6 +228,9 @@ if __name__ == '__main__':
     read_file()
     save_file()
     codecs_use()
+
+    # get filename
+    get_file_name()
 
     # 格式化打印
     str1 = "wang"
@@ -231,4 +267,10 @@ if __name__ == '__main__':
     # 四舍五入，保留小数后n位 round(x, n)
     x = 1.545
     print(round(x, 2))
-    print(round(x))  #默认保留整数部分
+    print(round(x))  # 默认保留整数部分
+
+    # 数据类型
+
+    li2 = [1, 2, 3]
+
+    print("list type: ", type(li2), type(li2) == list)
