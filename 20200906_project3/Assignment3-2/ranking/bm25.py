@@ -24,8 +24,13 @@ import joblib
 
 
 sys.path.append('..')
+cur_path = os.path.abspath(os.path.dirname(__file__))
+root_path = os.path.split(cur_path)[0]
 
-from config import root_path
+print("cur_path: ", cur_path)
+print("root_path: ", root_path)
+
+# from config import root_path
 
 
 class BM25(object):
@@ -57,9 +62,29 @@ class BM25(object):
 
     def get_idf(self):
         self.data['question2'] = self.data['question2'].apply(lambda x: " ".join(jieba.cut(x)))
+        
+        ###test
+        print(self.data['question2'])
+        print(self.data['question2'].to_list())
+        li = [y for x in self.data["question2"].to_list() for y in x.split()]
+        print(li)
+        
+        
         idf = Counter([y for x in self.data['question2'].tolist() for y in x.split()])
+        
+        ###test
+        print("idf counter: ", idf)
+        
         idf = {k: self.cal_idf(k, self.data['question2'].tolist()) for k, v in idf.items()}
+        
+        ###test
+        print("idf: ", idf)
+        
         avgdl = np.array([len(x.split()) for x in self.data['question2'].tolist()]).mean()
+        
+        ###test
+        print("avgdl: ", avgdl)
+        
         return idf, avgdl
 
     def saver(self, save_path):

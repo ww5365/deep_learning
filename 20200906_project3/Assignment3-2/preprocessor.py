@@ -181,7 +181,7 @@ def generate_data(filepath, save=True, to_file=None, pair=False):
                             values='content',
                             aggfunc='first').reset_index()
     data = data[['session_id', 'custom',
-                'assistance']].dropna().reset_index(drop=True)
+                 'assistance']].dropna().reset_index(drop=True)
 
     if save:
         data.to_csv('{}.csv'.format(to_file), index=False)

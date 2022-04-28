@@ -122,6 +122,7 @@ class RANK(object):
         self.gbm.fit(X_train, y_train, group=query_train,
                      eval_set=[(X_test, y_test)], eval_group=[query_val],
                      eval_at=[5, 10, 20], early_stopping_rounds=50)
+        self.gbm.t
 
     def save(self, model_path):
         logging.info('Saving lightgbm model.')

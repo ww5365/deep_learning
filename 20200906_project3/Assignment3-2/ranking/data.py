@@ -64,6 +64,7 @@ class DataPrecessForSentence(Dataset):
         df["question2"] = df["question2"].apply(lambda x: "".join(x.split()))
         labels = df['label'].astype('int8').values
 
+
         # 切词
         tokens_seq_1 = list(
             map(self.bert_tokenizer.tokenize, df['question1'].values))
@@ -96,7 +97,7 @@ class DataPrecessForSentence(Dataset):
             seq_segment : shape等于seq，单句，取值都为0 ，双句按照01切分
 
         """
-        # 对超长序列进行截断
+        # 对超长序列进行截断  // 运算符 是下取整  9//2 = 4
         if len(tokens_seq_1) > ((self.max_seq_len - 3) // 2):
             tokens_seq_1 = tokens_seq_1[0:(self.max_seq_len - 3) // 2]
         if len(tokens_seq_2) > ((self.max_seq_len - 3) // 2):

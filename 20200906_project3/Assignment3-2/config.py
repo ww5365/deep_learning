@@ -46,7 +46,7 @@ M = 64  # M defines tha maximum number of outgoing connections in the graph
 hnsw_path = os.path.join(root_path, 'model/retrieval/hnsw_index')
 
 # 通用配置
-is_cuda = True
+is_cuda = False
 if is_cuda:
     device = torch.device('cuda')
 else:

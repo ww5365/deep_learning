@@ -63,9 +63,9 @@ class BM25(object):
         return idf, avgdl
 
     def saver(self, save_path):
-        joblib.dump(self.idf, save_path + 'bm25_idf.bin')
+        joblib.dump(self., save_path + 'bm25_idf.bin')
         joblib.dump(self.avgdl, save_path + 'bm25_avgdl.bin')
-
+        
     def load(self, save_path):
         self.idf = joblib.load(save_path + 'bm25_idf.bin')
         self.avgdl = joblib.load(save_path + 'bm25_avgdl.bin')
