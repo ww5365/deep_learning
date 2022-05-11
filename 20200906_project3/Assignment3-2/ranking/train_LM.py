@@ -19,7 +19,11 @@ import jieba
 from gensim import corpora, models
 
 sys.path.append('..')
-from config import root_path
+#from config import root_path
+cur_path = os.path.abspath(os.path.dirname(__file__))
+root_path = os.path.split(cur_path)[0]
+
+print("root_path:", root_path)
 
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s',
                     level=logging.INFO)
@@ -27,17 +31,19 @@ logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s',
 
 class Trainer(object):
     def __init__(self):
-        self.data = self.data_reader(os.path.join(root_path, 'data/ranking/train.tsv')) + \
-            self.data_reader(os.path.join(root_path, 'data/ranking/dev.tsv')) + \
-            self.data_reader(os.path.join(root_path, 'data/ranking/test.tsv'))
-        self.stopwords = open(os.path.join(root_path, 'data/stopwords.txt')).readlines()
+        self.data = self.data_reader(os.path.join(root_path, 'data/ranking/train.tsv'))
+        #+ \
+        #    self.data_reader(os.path.join(root_path, 'data/ranking/test.tsv'))
+
+            #self.data_reader(os.path.join(root_path, 'data/ranking/dev.tsv')) + \
+        self.stopwords = open(os.path.join(root_path, 'data/stopwords.txt'), 'r', encoding = 'utf-8').readlines()
         self.preprocessor()
         self.train()
         self.saver()
 
     def data_reader(self, path):
         samples = []
-        with open(path, 'r') as f:
+        with open(path, 'r', encoding='UTF-8') as f:
             for line in f:
                 try:
                     q1, q2, label = line.split('\t')
@@ -56,15 +62,16 @@ class Trainer(object):
         logging.info(" loading data.... ")
         self.data = [[
             word for word in jieba.cut(sentence) if word not in self.stopwords
-        ] for sentence in self.data]
+        ] for sentence in self.data] # [['a', 'b']['c', 'd']]
+        
         self.freq = defaultdict(int)
         for sentence in self.data:
             for word in sentence:
                 self.freq[word] += 1
         self.data = [[word for word in sentence if self.freq[word] > 1]
-                     for sentence in self.data]
+                     for sentence in self.data] # 词频大于1的term
         logging.info(' building dictionary....')
-        self.dictionary = corpora.Dictionary(self.data)
+        self.dictionary = corpora.Dictionary(self.data) # corpora 构建什么
         self.dictionary.save(os.path.join(root_path, 'model/ranking/ranking.dict'))
         self.corpus = [self.dictionary.doc2bow(text) for text in self.data]
         corpora.MmCorpus.serialize(os.path.join(root_path, 'model/ranking/ranking.mm'),

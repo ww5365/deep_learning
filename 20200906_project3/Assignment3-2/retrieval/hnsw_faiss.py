@@ -21,6 +21,13 @@ from gensim.models import KeyedVectors
 import faiss
 
 sys.path.append('..')
+
+cur_path = os.path.abspath(os.path.dirname(__file__))
+root_path = os.path.split(cur_path)[0]
+print("root_path in hnsw_faiss:", root_path)
+
+sys.path.append(root_path)
+
 import config
 from preprocessor import clean
 

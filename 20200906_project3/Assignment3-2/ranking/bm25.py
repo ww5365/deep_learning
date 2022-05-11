@@ -66,21 +66,21 @@ class BM25(object):
         ###test
         print(self.data['question2'])
         print(self.data['question2'].to_list())
-        li = [y for x in self.data["question2"].to_list() for y in x.split()]
+        li = [y for x in self.data["question2"].to_list() for y in x.split()]  # 这步把['a b', 'c'] -> ['a', 'b', 'c']
         print(li)
         
         
-        idf = Counter([y for x in self.data['question2'].tolist() for y in x.split()])
+        idf = Counter([y for x in self.data['question2'].tolist() for y in x.split()])  # 词频统计: {'a' : 1, 'b' : 2 ,,}
         
         ###test
         print("idf counter: ", idf)
         
-        idf = {k: self.cal_idf(k, self.data['question2'].tolist()) for k, v in idf.items()}
+        idf = {k: self.cal_idf(k, self.data['question2'].tolist()) for k, v in idf.items()} # 计算 {key ：idf值 }
         
         ###test
         print("idf: ", idf)
         
-        avgdl = np.array([len(x.split()) for x in self.data['question2'].tolist()]).mean()
+        avgdl = np.array([len(x.split()) for x in self.data['question2'].tolist()]).mean()  ## 所有文档的平均长度
         
         ###test
         print("avgdl: ", avgdl)

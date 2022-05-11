@@ -18,11 +18,17 @@ import jieba.posseg as pseg
 import numpy as np
 from gensim import corpora, models
 
-from config import root_path
+sys.path.append('..')
+cur_path = os.path.abspath(os.path.dirname(__file__))
+root_path = os.path.split(cur_path)[0]
+print("root_path:", root_path)
+
+sys.path.append(root_path)
+# from config import root_path
 from retrieval.hnsw_faiss import wam
 from ranking.bm25 import BM25
 
-sys.path.append('..')
+
 
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s',
                     level=logging.INFO)
